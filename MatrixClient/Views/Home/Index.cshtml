@@ -1,0 +1,64 @@
+﻿@model string[]
+
+@{
+	ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+	<h1 class="display-4">Pixel Matrix</h1>
+
+	<div class="image-container">
+	@foreach (var imagePath in Model)
+	{
+		<img src="@Url.Content(imagePath)" alt="Image" class="image-item"  onclick="displayLargeImage('@imagePath')" />
+	}
+	</div>
+
+	<div id="large-image-container" class="large-image-container">
+		<img id="large-image" src="" alt="Large Image" />
+	</div>
+
+	<button id="btnSend">Send</button>
+
+</div>
+
+@section scripts {
+	<script>
+	$(document).ready(function () {
+		var firstImage = document.querySelector(".image-item");
+		if (firstImage) {
+			displayLargeImage(firstImage.src);
+		}
+
+		$('#btnSend').click(function () {
+			let fileName = document.getElementById("large-image").src;
+			fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
+			console.log(fileName);
+			$.ajax({
+				url: '@Url.Action("SendToMatrix", "Pixels")',
+				type: 'POST',
+				data: { fileName: fileName },
+				success: function (result) {
+					// Handle success response if needed
+					console.log(result);
+				},
+				error: function (xhr, status, error) {
+					// Handle error response if needed
+					console.error(xhr.responseText);
+				}
+			});
+		});
+	});
+
+	function displayLargeImage(imageUrl) {
+		var largeImage = document.getElementById("large-image");
+		largeImage.src = imageUrl;
+		largeImage.style.width = "256px";
+		largeImage.style.height = "256px";
+
+		var largeImageContainer = document.getElementById("large-image-container");
+		largeImageContainer.style.display = "block";
+	}
+	</script>
+}
+
