@@ -1,0 +1,29 @@
+name: Build and Publish Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.100
+
+    - name: Build and Publish Docker image
+      run: |
+        cd MatrixClient
+        docker build -t matrixclient:latest .
+        docker tag matrixclient:latest c8n.io/z1c0/matrixclient:latest
+        echo ${{ secrets.DOCKER_PASSWORD }} | docker login c8n.io -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        docker push c8n.io/z1c0/matrixclient:latest
+      env:
+        DOTNET_ROOT: ${{ env.DOTNET_ROOT }}
