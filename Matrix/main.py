@@ -6,6 +6,7 @@ import wifi
 import socketpool
 import random
 from adafruit_httpserver import Server, Request, Response, POST
+import secrets
 
 
 MATRIX_DIM = 32
@@ -51,7 +52,7 @@ def webpage():
 
 fill((0, 0, 0))
 print("Connecting to WiFi")
-wifi.radio.connect('<ssid>', '<password>')
+wifi.radio.connect(secrets.WIFI_SSID, secrets.WIFI_PASSWORD)
 print("Connected to WiFi")
 pool = socketpool.SocketPool(wifi.radio)
 print("IP address: ", wifi.radio.ipv4_address)

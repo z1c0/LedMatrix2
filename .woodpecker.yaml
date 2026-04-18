@@ -1,0 +1,25 @@
+steps:
+  - name: build-and-push
+    image: woodpeckerci/plugin-kaniko
+    when:
+      - event: push
+        branch: main
+    settings:
+      registry: registry-http.registry.svc.cluster.local
+      repo: matrixclient
+      tags: latest
+      context: MatrixClient
+      dockerfile: MatrixClient/Dockerfile
+      insecure: true
+      insecure-pull: true
+    backend_options:
+      kubernetes:
+        nodeSelector:
+          kubernetes.io/arch: arm64
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 500m
+          limits:
+            memory: 1Gi
+            cpu: 1000m
