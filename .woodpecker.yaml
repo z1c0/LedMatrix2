@@ -23,3 +23,14 @@ steps:
           limits:
             memory: 1Gi
             cpu: 1000m
+
+  - name: deploy
+    image: bitnami/kubectl
+    when:
+      - event: push
+        branch: main
+    commands:
+      - kubectl rollout restart deployment/pixelmatrix -n pixelmatrix
+    backend_options:
+      kubernetes:
+        serviceAccountName: woodpecker-agent
