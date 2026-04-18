@@ -12,6 +12,8 @@ steps:
       dockerfile: MatrixClient/Dockerfile
       insecure: true
       insecure-pull: true
+      cache: true
+      cache-repo: registry-http.registry.svc.cluster.local/cache/matrixclient
     backend_options:
       kubernetes:
         nodeSelector:
