@@ -15,11 +15,17 @@ public class HomeController : Controller
 
 	public IActionResult Index()
 	{
-		var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data");
-		var imagePaths = Directory.GetFiles(folderPath, "*.*")
-			.Select(p => Url.Content("~/data/" + Path.GetFileName(p)))
-			.ToArray();
-		return View(imagePaths);
+		var dataRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data");
+		var groups = Directory.GetDirectories(dataRoot)
+			.OrderBy(d => d)
+			.ToDictionary(
+				d => Path.GetFileName(d)!,
+				d => Directory.GetFiles(d, "*.*")
+					.OrderBy(f => f)
+					.Select(f => $"{Path.GetFileName(d)}/{Path.GetFileName(f)}")
+					.ToArray()
+			);
+		return View(groups);
 	}
 
 	[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

@@ -1,4 +1,4 @@
-﻿@model string[]
+@model Dictionary<string, string[]>
 
 @{
 	ViewData["Title"] = "Home Page";
@@ -7,12 +7,17 @@
 <div class="text-center">
 	<h1 class="display-4">Pixel Matrix</h1>
 
-	<div class="image-container">
-	@foreach (var imagePath in Model)
+	@foreach (var group in Model)
 	{
-		<img src="@Url.Content(imagePath)" alt="Image" class="image-item"  onclick="displayLargeImage('@imagePath')" />
+		<h4 class="mt-3 text-capitalize">@group.Key</h4>
+		<div class="image-container">
+		@foreach (var path in group.Value)
+		{
+			<img src="@Url.Content("~/data/" + path)" alt="@Path.GetFileNameWithoutExtension(path)" class="image-item"
+				data-path="@path" onclick="displayLargeImage(this)" />
+		}
+		</div>
 	}
-	</div>
 
 	<div id="large-image-container" class="large-image-container">
 		<img id="large-image" src="" alt="Large Image" />
@@ -24,35 +29,34 @@
 
 @section scripts {
 	<script>
+	var selectedPath = null;
+
 	$(document).ready(function () {
 		var firstImage = document.querySelector(".image-item");
 		if (firstImage) {
-			displayLargeImage(firstImage.src);
+			displayLargeImage(firstImage);
 		}
 
 		$('#btnSend').click(function () {
-			let fileName = document.getElementById("large-image").src;
-			fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
-			console.log(fileName);
+			if (!selectedPath) return;
 			$.ajax({
 				url: '@Url.Action("SendToMatrix", "Pixels")',
 				type: 'POST',
-				data: { fileName: fileName },
+				data: { fileName: selectedPath },
 				success: function (result) {
-					// Handle success response if needed
 					console.log(result);
 				},
 				error: function (xhr, status, error) {
-					// Handle error response if needed
 					console.error(xhr.responseText);
 				}
 			});
 		});
 	});
 
-	function displayLargeImage(imageUrl) {
+	function displayLargeImage(imgEl) {
+		selectedPath = imgEl.dataset.path;
 		var largeImage = document.getElementById("large-image");
-		largeImage.src = imageUrl;
+		largeImage.src = imgEl.src;
 		largeImage.style.width = "256px";
 		largeImage.style.height = "256px";
 
@@ -61,4 +65,3 @@
 	}
 	</script>
 }
-
