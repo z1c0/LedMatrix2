@@ -13,7 +13,7 @@
 		<div class="image-container">
 		@foreach (var path in group.Value)
 		{
-			<img src="@Url.Content("~/data/" + path)" alt="@Path.GetFileNameWithoutExtension(path)" class="image-item"
+			<img src="@Url.Content("~/data/" + path)" alt="@System.IO.Path.GetFileNameWithoutExtension(path)" class="image-item"
 				data-path="@path" onclick="displayLargeImage(this)" />
 		}
 		</div>
