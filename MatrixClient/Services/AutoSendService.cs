@@ -22,8 +22,11 @@ public class AutoSendService(AutoSendConfig config, IWebHostEnvironment env)
             time <= TimeSpan.Parse(r.To));
     }
 
-    public string? GetRandomImagePath(string category)
+    public string? GetImagePath(string category)
     {
+        // Dynamic modes return themselves as the path; PixelSenderService handles them
+        if (category is "clock" or "calendar") return category;
+
         var dir = Path.Combine(env.WebRootPath, "data", category);
         if (!Directory.Exists(dir)) return null;
         var files = Directory.GetFiles(dir, "*.*");

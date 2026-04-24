@@ -10,8 +10,12 @@ public class PixelSenderService(IHttpClientFactory httpClientFactory, IWebHostEn
 
     public async Task SendAsync(string relativePath)
     {
-        var bitmapPath = Path.Combine(env.WebRootPath, "data", relativePath);
-        using var image = Image.Load<Rgba32>(bitmapPath);
+        using var image = relativePath switch
+        {
+            "clock"    => ClockRenderer.Render(),
+            "calendar" => CalendarRenderer.Render(),
+            _          => Image.Load<Rgba32>(Path.Combine(env.WebRootPath, "data", relativePath))
+        };
         if (image.Width != 32 || image.Height != 32)
             throw new Exception($"Unexpected image dimensions: {image.Width}x{image.Height}");
 

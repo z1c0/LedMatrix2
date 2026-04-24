@@ -246,6 +246,11 @@ body {
   font-size: 0.7rem;
 }
 
+.sched-legend-interval {
+  color: #4a9eff;
+  font-size: 0.68rem;
+}
+
 /* Calendar grid */
 .sched-wrap {
   display: flex;

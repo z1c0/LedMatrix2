@@ -10,6 +10,14 @@
 
 <div class="px-layout">
 	<div class="px-gallery">
+		<div class="px-category">dynamic</div>
+		<div class="px-grid">
+			<img src="@Url.Action("Preview", "Dynamic", new { mode = "clock" })"
+				 alt="clock" class="px-thumb" data-path="clock" onclick="selectImage(this)" />
+			<img src="@Url.Action("Preview", "Dynamic", new { mode = "calendar" })"
+				 alt="calendar" class="px-thumb" data-path="calendar" onclick="selectImage(this)" />
+		</div>
+
 		@foreach (var group in Model)
 		{
 			<div class="px-category">@group.Key</div>

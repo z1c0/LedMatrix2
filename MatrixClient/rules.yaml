@@ -18,3 +18,23 @@ rules:
     from: "10:00"
     to: "18:00"
     category: rpg
+
+  - name: Morning Clock
+    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
+    from: "06:00"
+    to: "07:00"
+    category: clock
+    interval_minutes: 1
+
+  - name: Evening Clock
+    days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+    from: "22:00"
+    to: "23:59"
+    category: clock
+    interval_minutes: 1
+
+  - name: Daily Calendar
+    days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+    from: "00:00"
+    to: "01:00"
+    category: calendar

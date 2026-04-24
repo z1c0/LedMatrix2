@@ -38,6 +38,10 @@ else
                 <strong>@rule.Name</strong>
                 <span class="sched-legend-cat">@rule.Category</span>
                 <span class="sched-legend-time">@rule.From – @rule.To</span>
+                @if (rule.IntervalMinutes.HasValue)
+                {
+                    <span class="sched-legend-interval">every @rule.IntervalMinutes min</span>
+                }
             </div>
         }
     </div>
