@@ -18,7 +18,7 @@ An **ASP.NET Core MVC** (.NET 10) application running in Docker on a home Kubern
 
 ### Features
 
-**Gallery** — browse and send any of the 32×32 PNG images organised into categories (`food`, `rpg`, `retro`, `other`).
+**Gallery** — browse and send any of the 32×32 PNG images organised into categories (`food`, `rpg`, `retro`, `tech`, `chess`, `other`, `windows`).
 
 **Draw** — paint directly on a 32×32 pixel canvas with draw, erase, and flood-fill tools, then send to the matrix instantly.
 
@@ -30,3 +30,15 @@ An **ASP.NET Core MVC** (.NET 10) application running in Docker on a home Kubern
 - **Weather** — current temperature and a weather condition icon fetched from [Open-Meteo](https://open-meteo.com/) (no API key required); location configured in `appsettings.json`
 
 **Schedule view** — weekly calendar showing which auto-send rules are active and when.
+
+## Image Attribution
+
+Pixel art sourced from [Kenney](https://kenney.nl) under the [CC0 1.0 Public Domain](https://creativecommons.org/publicdomain/zero/1.0/) licence (no attribution required, but credited here in appreciation):
+
+| Pack | Used in |
+|---|---|
+| [Game Icons](https://kenney.nl/assets/game-icons) | `ui/` — 105 UI and game-mechanic icons |
+| [1-Bit Pack](https://kenney.nl/assets/1-bit-pack) | `retro/` (robots, space invaders, ghosts), `tech/` (computers, monitors, floppy disks), `chess/` (all 12 pieces) |
+| [Tiny Dungeon](https://kenney.nl/assets/tiny-dungeon) | `rpg/` — character portraits, weapons, and potions |
+
+Windows 3.1 icons sourced from [many-windows-3.1-icons-in-png-format](https://github.com/mRB0/many-windows-3.1-icons-in-png-format) by mRB0 — 32×32 PNG reconstructions of original Windows 3.1 program icons (`windows/` — Calculator, Solitaire, Minesweeper, Notepad, Paintbrush, File Manager, and 150+ others).
