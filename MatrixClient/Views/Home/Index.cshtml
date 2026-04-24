@@ -1,67 +1,125 @@
 @model Dictionary<string, string[]>
 
 @{
-	ViewData["Title"] = "Home Page";
+	ViewData["Title"] = "Pixel Matrix";
 }
 
-<div class="text-center">
-	<h1 class="display-4">Pixel Matrix</h1>
+<div class="px-header">
+	<h1>Pixel Matrix</h1>
+</div>
 
-	@foreach (var group in Model)
-	{
-		<h4 class="mt-3 text-capitalize">@group.Key</h4>
-		<div class="image-container">
-		@foreach (var path in group.Value)
+<div class="px-layout">
+	<div class="px-gallery">
+		@foreach (var group in Model)
 		{
-			<img src="@Url.Content("~/data/" + path)" alt="@System.IO.Path.GetFileNameWithoutExtension(path)" class="image-item"
-				data-path="@path" onclick="displayLargeImage(this)" />
+			<div class="px-category">@group.Key</div>
+			<div class="px-grid">
+			@foreach (var path in group.Value)
+			{
+				<img src="@Url.Content("~/data/" + path)"
+					 alt="@System.IO.Path.GetFileNameWithoutExtension(path)"
+					 class="px-thumb"
+					 data-path="@path"
+					 onclick="selectImage(this)" />
+			}
+			</div>
 		}
-		</div>
-	}
-
-	<div id="large-image-container" class="large-image-container">
-		<img id="large-image" src="" alt="Large Image" />
 	</div>
 
-	<button id="btnSend" class="btn btn-primary">Send Pixels</button>
+	<div class="px-sidebar">
+		<div class="px-preview">
+			<img id="large-image" src="" alt="" />
+		</div>
+		<button id="btnSend" class="px-send-btn" disabled>Send Pixels</button>
+		<div id="sendError" class="px-send-error" style="display:none"></div>
 
+		<div class="px-autosend">
+			<div class="px-autosend-row">
+				<span class="px-autosend-label">Auto-send</span>
+				<button id="btnAutoSend" class="px-autosend-toggle">Enable</button>
+			</div>
+			<div id="autoSendInfo" class="px-autosend-info" style="display:none">
+				<span id="activeRuleName"></span> &middot; every <span id="intervalMin"></span> min
+			</div>
+		</div>
+	</div>
 </div>
 
 @section scripts {
 	<script>
 	var selectedPath = null;
+	var selectedThumb = null;
 
 	$(document).ready(function () {
-		var firstImage = document.querySelector(".image-item");
-		if (firstImage) {
-			displayLargeImage(firstImage);
-		}
+		var firstImage = document.querySelector(".px-thumb");
+		if (firstImage) selectImage(firstImage);
+
+		refreshAutoSendStatus();
+		setInterval(refreshAutoSendStatus, 30000);
+
+		$('#btnAutoSend').click(function () {
+			var enabling = $(this).text() === 'Enable';
+			$.post(enabling ? '@Url.Action("Enable", "AutoSend")' : '@Url.Action("Disable", "AutoSend")',
+				function () { refreshAutoSendStatus(); });
+		});
 
 		$('#btnSend').click(function () {
 			if (!selectedPath) return;
+			var btn = $(this);
+			btn.prop('disabled', true).text('Sending…');
+			$('#sendError').hide();
 			$.ajax({
 				url: '@Url.Action("SendToMatrix", "Pixels")',
 				type: 'POST',
 				data: { fileName: selectedPath },
 				success: function (result) {
-					console.log(result);
+					if (result.success) {
+						btn.text('Sent!');
+						setTimeout(function () { btn.prop('disabled', false).text('Send Pixels'); }, 1500);
+					} else {
+						btn.prop('disabled', false).text('Send Pixels');
+						showError(result.error || 'Unknown error');
+					}
 				},
-				error: function (xhr, status, error) {
-					console.error(xhr.responseText);
+				error: function (xhr) {
+					btn.prop('disabled', false).text('Send Pixels');
+					showError(xhr.responseText || 'Request failed');
 				}
 			});
 		});
 	});
 
-	function displayLargeImage(imgEl) {
-		selectedPath = imgEl.dataset.path;
-		var largeImage = document.getElementById("large-image");
-		largeImage.src = imgEl.src;
-		largeImage.style.width = "256px";
-		largeImage.style.height = "256px";
+	function refreshAutoSendStatus() {
+		$.getJSON('@Url.Action("Status", "AutoSend")', function (s) {
+			var btn = $('#btnAutoSend');
+			if (s.enabled) {
+				btn.text('Disable').addClass('active');
+				$('#intervalMin').text(s.intervalMinutes);
+				if (s.activeRule) {
+					$('#activeRuleName').text(s.activeRule);
+					$('#autoSendInfo').show();
+				} else {
+					$('#activeRuleName').text('no matching rule');
+					$('#autoSendInfo').show();
+				}
+			} else {
+				btn.text('Enable').removeClass('active');
+				$('#autoSendInfo').hide();
+			}
+		});
+	}
 
-		var largeImageContainer = document.getElementById("large-image-container");
-		largeImageContainer.style.display = "block";
+	function showError(msg) {
+		$('#sendError').text(msg).show();
+	}
+
+	function selectImage(imgEl) {
+		if (selectedThumb) selectedThumb.classList.remove('selected');
+		selectedThumb = imgEl;
+		imgEl.classList.add('selected');
+		selectedPath = imgEl.dataset.path;
+		document.getElementById('large-image').src = imgEl.src;
+		document.getElementById('btnSend').disabled = false;
 	}
 	</script>
 }

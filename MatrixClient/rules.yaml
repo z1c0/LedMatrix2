@@ -1,0 +1,20 @@
+interval_minutes: 10
+
+rules:
+  - name: Morning Fuel
+    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
+    from: "07:00"
+    to: "09:00"
+    category: food
+
+  - name: Gaming Night
+    days: [Friday, Saturday]
+    from: "20:00"
+    to: "23:59"
+    category: retro
+
+  - name: Weekend RPG
+    days: [Saturday, Sunday]
+    from: "10:00"
+    to: "18:00"
+    category: rpg

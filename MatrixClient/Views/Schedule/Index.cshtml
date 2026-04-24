@@ -1,0 +1,90 @@
+@model MatrixClient.Models.AutoSendConfig
+@{
+    ViewData["Title"] = "Schedule";
+
+    var days     = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+    var dayShort = new[] { "Mon",    "Tue",     "Wed",       "Thu",      "Fri",    "Sat",      "Sun" };
+
+    var ruleColors = new[] { "#4a9eff", "#6dbf6d", "#f4a261", "#e07070", "#a78bfa", "#34d399" };
+
+    double ToMinutes(string t)
+    {
+        var p = t.Split(':');
+        return int.Parse(p[0]) * 60 + int.Parse(p[1]);
+    }
+
+    string Pct(double minutes) =>
+        (minutes / 1440.0 * 100).ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + "%";
+}
+
+<div class="px-header sched-page-header">
+    <h1>Schedule</h1>
+    <span class="sched-interval">every @Model.IntervalMinutes min</span>
+</div>
+
+@if (Model.Rules.Count == 0)
+{
+    <p class="sched-empty">No rules defined in <code>rules.yaml</code>.</p>
+}
+else
+{
+    <div class="sched-legend">
+        @for (var i = 0; i < Model.Rules.Count; i++)
+        {
+            var rule = Model.Rules[i];
+            var color = ruleColors[i % ruleColors.Length];
+            <div class="sched-legend-item">
+                <span class="sched-legend-dot" style="background:@color"></span>
+                <strong>@rule.Name</strong>
+                <span class="sched-legend-cat">@rule.Category</span>
+                <span class="sched-legend-time">@rule.From – @rule.To</span>
+            </div>
+        }
+    </div>
+
+    <div class="sched-wrap">
+        <div class="sched-times">
+            @for (var h = 0; h < 24; h++)
+            {
+                <div class="sched-hour-label">@h.ToString("D2"):00</div>
+            }
+        </div>
+
+        @for (var d = 0; d < 7; d++)
+        {
+            var dayName  = days[d];
+            var dayAbbr  = dayShort[d];
+            <div class="sched-day-col">
+                <div class="sched-day-name" data-day="@dayAbbr">@dayAbbr</div>
+                <div class="sched-day-body">
+                    @for (var i = 0; i < Model.Rules.Count; i++)
+                    {
+                        var rule  = Model.Rules[i];
+                        var color = ruleColors[i % ruleColors.Length];
+                        if (rule.Days.Any(rd => string.Equals(rd, dayName, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            var top    = Pct(ToMinutes(rule.From));
+                            var height = Pct(ToMinutes(rule.To) - ToMinutes(rule.From));
+                            <div class="sched-rule-block"
+                                 style="top:@top;height:@height;background:@color"
+                                 title="@rule.Name (@rule.From – @rule.To)">
+                                <div class="sched-rule-name">@rule.Name</div>
+                                <div class="sched-rule-cat">@rule.Category</div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section scripts {
+    <script>
+    $(document).ready(function () {
+        var abbrs = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        var today = abbrs[new Date().getDay()];
+        $('.sched-day-name[data-day="' + today + '"]').addClass('today');
+    });
+    </script>
+}
