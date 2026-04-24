@@ -5,19 +5,20 @@ using MatrixClient.Services;
 
 namespace MatrixClient.Controllers;
 
-public class DynamicController : Controller
+public class DynamicController(WeatherService weatherService) : Controller
 {
-    private static readonly HashSet<string> KnownModes = ["clock", "calendar"];
+    private static readonly HashSet<string> KnownModes = ["clock", "calendar", "weather"];
 
     [HttpGet]
     [Route("Dynamic/Preview/{mode}")]
-    public IActionResult Preview(string mode)
+    public async Task<IActionResult> Preview(string mode)
     {
-        Image<Rgba32> img = mode switch
+        Image<Rgba32>? img = mode switch
         {
             "clock"    => ClockRenderer.Render(),
             "calendar" => CalendarRenderer.Render(),
-            _          => null!
+            "weather"  => await WeatherRenderer.RenderAsync(weatherService),
+            _          => null
         };
         if (img is null) return NotFound();
 

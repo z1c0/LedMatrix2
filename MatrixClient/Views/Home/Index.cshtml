@@ -16,6 +16,8 @@
 				 alt="clock" class="px-thumb" data-path="clock" onclick="selectImage(this)" />
 			<img src="@Url.Action("Preview", "Dynamic", new { mode = "calendar" })"
 				 alt="calendar" class="px-thumb" data-path="calendar" onclick="selectImage(this)" />
+			<img src="@Url.Action("Preview", "Dynamic", new { mode = "weather" })"
+				 alt="weather" class="px-thumb" data-path="weather" onclick="selectImage(this)" />
 		</div>
 
 		@foreach (var group in Model)

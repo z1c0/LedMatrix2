@@ -25,7 +25,7 @@ public class AutoSendService(AutoSendConfig config, IWebHostEnvironment env)
     public string? GetImagePath(string category)
     {
         // Dynamic modes return themselves as the path; PixelSenderService handles them
-        if (category is "clock" or "calendar") return category;
+        if (category is "clock" or "calendar" or "weather") return category;
 
         var dir = Path.Combine(env.WebRootPath, "data", category);
         if (!Directory.Exists(dir)) return null;

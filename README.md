@@ -18,9 +18,9 @@ An **ASP.NET MVC** application controls the pixel art displayed on the matrix.
 
 ### TODOs
 
-* **Grouping** or **tagging** the icons (e.g. `emoji`, `food`, ....).
+* ~~**Grouping** or **tagging** the icons (e.g. `emoji`, `food`, ....).~~
 * Image **upload** (and conversion) functionality. Currently, you have to manually add 32x32 images to the `wwwroot` folder.
-* "**Auto-send**" mode in which the images are periodically and randomly sent to the matrix.
+* ~~"**Auto-send**" mode in which the images are periodically and randomly sent to the matrix.~~
 * An **editor** mode in which custom pixel artwork can be created.
 * Dynamically generated images:
   * A **clock** (analog, digital, ...).

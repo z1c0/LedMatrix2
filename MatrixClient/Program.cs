@@ -2,6 +2,7 @@ using MatrixClient.Models;
 using MatrixClient.Services;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,10 @@ builder.Services.AddSingleton(autoSendConfig);
 builder.Services.AddSingleton<AutoSendService>();
 builder.Services.AddSingleton<PixelSenderService>();
 builder.Services.AddHostedService<AutoSendBackgroundService>();
+
+var weatherConfig = builder.Configuration.GetSection("Weather").Get<WeatherConfig>() ?? new WeatherConfig();
+builder.Services.AddSingleton(weatherConfig);
+builder.Services.AddSingleton<WeatherService>();
 
 var app = builder.Build();
 

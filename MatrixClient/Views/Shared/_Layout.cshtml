@@ -17,6 +17,7 @@
 		<nav class="px-nav">
 			<a asp-controller="Home"     asp-action="Index" class="px-nav-link @(currentController == "Home"     ? "active" : "")">Gallery</a>
 			<a asp-controller="Schedule" asp-action="Index" class="px-nav-link @(currentController == "Schedule" ? "active" : "")">Schedule</a>
+			<a asp-controller="Draw"     asp-action="Index" class="px-nav-link @(currentController == "Draw"     ? "active" : "")">Draw</a>
 		</nav>
 		<main role="main" class="pb-3">
 			@RenderBody()

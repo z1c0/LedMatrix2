@@ -1,0 +1,186 @@
+@{
+    ViewData["Title"] = "Draw";
+}
+
+<div class="px-header">
+    <h1>Draw</h1>
+</div>
+
+<div class="draw-layout">
+    <div class="draw-canvas-wrap">
+        <canvas id="drawCanvas"></canvas>
+    </div>
+
+    <div class="draw-sidebar">
+        <div class="draw-palette" id="palette"></div>
+
+        <div class="draw-color-row">
+            <div class="draw-current-color" id="currentSwatch"></div>
+            <input type="color" id="colorPicker" value="#ff0000" title="Custom colour" />
+        </div>
+
+        <div class="draw-tools">
+            <button class="draw-tool active" data-tool="draw"  title="Draw">✏</button>
+            <button class="draw-tool"        data-tool="erase" title="Erase">⌫</button>
+            <button class="draw-tool"        data-tool="fill"  title="Fill">◈</button>
+            <button class="draw-tool"        id="btnClear"     title="Clear">✕</button>
+        </div>
+
+        <button id="btnSend" class="px-send-btn" style="margin-top:auto">Send</button>
+        <div id="drawError" class="px-send-error" style="display:none"></div>
+    </div>
+</div>
+
+@section scripts {
+<script>
+const COLS = 32, ROWS = 32, CELL = 14;
+const canvas = document.getElementById('drawCanvas');
+const ctx    = canvas.getContext('2d');
+canvas.width  = COLS * CELL;
+canvas.height = ROWS * CELL;
+
+let pixels  = Array.from({length: ROWS}, () => Array(COLS).fill('#000000'));
+let drawing = false;
+let tool    = 'draw';
+let color   = '#ff0000';
+
+// ── Palette ───────────────────────────────────────────────────────────────
+const PALETTE = [
+    '#000000','#222222','#555555','#888888','#bbbbbb','#ffffff','#ffddbb','#aa7744',
+    '#ff0000','#ff5500','#ffaa00','#ffff00','#aaff00','#00ff00','#00ffaa','#00ffff',
+    '#00aaff','#0055ff','#5500ff','#aa00ff','#ff00ff','#ff0077','#ff5599','#ffaacc',
+    '#660000','#663300','#666600','#006600','#006666','#000066','#330066','#660033',
+];
+
+const paletteEl = document.getElementById('palette');
+PALETTE.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'draw-swatch';
+    sw.style.background = c;
+    sw.title = c;
+    sw.addEventListener('click', () => setColor(c));
+    paletteEl.appendChild(sw);
+});
+
+function setColor(c) {
+    color = c;
+    document.getElementById('currentSwatch').style.background = c;
+    document.getElementById('colorPicker').value = c.slice(0,7);
+}
+setColor(color);
+
+document.getElementById('colorPicker').addEventListener('input', e => setColor(e.target.value));
+
+// ── Tools ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('.draw-tool[data-tool]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.draw-tool[data-tool]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        tool = btn.dataset.tool;
+    });
+});
+
+document.getElementById('btnClear').addEventListener('click', () => {
+    pixels = Array.from({length: ROWS}, () => Array(COLS).fill('#000000'));
+    renderAll();
+});
+
+// ── Render ────────────────────────────────────────────────────────────────
+function renderPixel(c, r) {
+    ctx.fillStyle = pixels[r][c];
+    ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
+}
+
+function renderAll() {
+    for (let r = 0; r < ROWS; r++)
+        for (let c = 0; c < COLS; c++)
+            renderPixel(c, r);
+    // grid overlay
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+    ctx.lineWidth = 0.5;
+    for (let c = 0; c <= COLS; c++) {
+        ctx.beginPath(); ctx.moveTo(c*CELL, 0); ctx.lineTo(c*CELL, ROWS*CELL); ctx.stroke();
+    }
+    for (let r = 0; r <= ROWS; r++) {
+        ctx.beginPath(); ctx.moveTo(0, r*CELL); ctx.lineTo(COLS*CELL, r*CELL); ctx.stroke();
+    }
+}
+renderAll();
+
+// ── Mouse / Touch ─────────────────────────────────────────────────────────
+function gridPos(e) {
+    const r = canvas.getBoundingClientRect();
+    return {
+        c: Math.floor((e.clientX - r.left) / r.width  * COLS),
+        r: Math.floor((e.clientY - r.top)  / r.height * ROWS),
+    };
+}
+
+function applyTool(e) {
+    const {c, r} = gridPos(e);
+    if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return;
+    if (tool === 'fill') {
+        floodFill(c, r, pixels[r][c], color === pixels[r][c] ? null : color);
+    } else {
+        pixels[r][c] = tool === 'erase' ? '#000000' : color;
+        renderPixel(c, r);
+    }
+}
+
+canvas.addEventListener('mousedown',  e => { drawing = true;  applyTool(e); });
+canvas.addEventListener('mousemove',  e => { if (drawing && tool !== 'fill') applyTool(e); });
+canvas.addEventListener('mouseup',    () => drawing = false);
+canvas.addEventListener('mouseleave', () => drawing = false);
+
+canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true;  applyTool(e.touches[0]); }, {passive:false});
+canvas.addEventListener('touchmove',  e => { e.preventDefault(); if (drawing) applyTool(e.touches[0]); },     {passive:false});
+canvas.addEventListener('touchend',   () => drawing = false);
+
+// ── Flood fill (BFS) ──────────────────────────────────────────────────────
+function floodFill(startC, startR, target, fill) {
+    if (!fill || target === fill) return;
+    const stack = [[startC, startR]];
+    while (stack.length) {
+        const [c, r] = stack.pop();
+        if (c < 0 || c >= COLS || r < 0 || r >= ROWS) continue;
+        if (pixels[r][c] !== target) continue;
+        pixels[r][c] = fill;
+        renderPixel(c, r);
+        stack.push([c+1,r],[c-1,r],[c,r+1],[c,r-1]);
+    }
+}
+
+// ── Send ──────────────────────────────────────────────────────────────────
+function buildHex() {
+    let s = '';
+    for (let r = 0; r < ROWS; r++)
+        for (let c = 0; c < COLS; c++)
+            s += pixels[r][c].replace('#','').toUpperCase();
+    return s;
+}
+
+$('#btnSend').click(function () {
+    const btn = $(this);
+    btn.prop('disabled', true).text('Sending…');
+    $('#drawError').hide();
+    $.ajax({
+        url:  '@Url.Action("Send", "Draw")',
+        type: 'POST',
+        data: { pixels: buildHex() },
+        success: function (result) {
+            if (result.success) {
+                btn.text('Sent!');
+                setTimeout(() => btn.prop('disabled', false).text('Send'), 1500);
+            } else {
+                btn.prop('disabled', false).text('Send');
+                $('#drawError').text(result.error || 'Unknown error').show();
+            }
+        },
+        error: function (xhr) {
+            btn.prop('disabled', false).text('Send');
+            $('#drawError').text(xhr.responseText || 'Request failed').show();
+        }
+    });
+});
+</script>
+}
