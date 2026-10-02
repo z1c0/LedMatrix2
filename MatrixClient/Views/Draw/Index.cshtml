@@ -179,7 +179,8 @@ $('#btnSend').click(function () {
         error: function (xhr) {
             btn.prop('disabled', false).text('Send');
             $('#drawError').text((xhr.responseJSON && xhr.responseJSON.error) || 'Request failed').show();
-        }
+        },
+        complete: function () { refreshDisplayStatus(); }
     });
 });
 </script>

@@ -50,6 +50,7 @@ No build step. Copy `Matrix/main.py` and a `secrets.py` (from `Matrix/secrets.py
 - **Schedule rules** use `[from, to)` windows with `24:00` for end of day; where rules overlap, the one listed first wins (shown on the Schedule page and logged at startup).
 - **Time zone** — clock, calendar and schedule use `TimeZone` from `appsettings.json` (`Europe/Vienna`) via an injected `TimeProvider`, not the host TZ; never use `DateTime.Now` directly. The Dockerfile copies tzdata into the chiseled image for this.
 - **`rules.yaml` is validated at startup** (`AutoSendConfig.Validate`); a bad rule stops the app with a list of errors. `enabled_on_startup` sets the auto-send state after a restart.
+- **The matrix is regularly powered off** (presence-switched socket) and boots to a black screen. `PicoStatus` tracks online/offline; auto-send skips sends while offline, and `AutoSendBackgroundService` TCP-probes the Pico every `Pico:ProbeSeconds` (60) and, when it comes back, re-sends the active rule's content or the last thing shown. Don't probe with `GET /` — it fills the display with a random colour. The nav shows the state (`Display/Status`); manual sends always try the matrix regardless of state, only auto-send pauses.
 - **Pico URL** is configured under `Pico:Url` in `MatrixClient/appsettings.json` (override with env var `Pico__Url`), with `Pico:TimeoutSeconds` for the send timeout.
 - **No `secrets.py` in source control** — create it from `Matrix/secrets.py.example` before deploying to the Pico.
 

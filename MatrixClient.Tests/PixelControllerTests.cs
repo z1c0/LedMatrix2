@@ -107,6 +107,22 @@ public class PixelControllerTests : IDisposable
         Assert.Equal("Matrix returned 500: oops", body.GetProperty("error").GetString());
     }
 
+    // Auto-send holds back while the display is off, but a person pressing Send always gets a real attempt
+    [Fact]
+    public async Task SendToMatrix_TriesEvenWhenDisplayIsMarkedOffline()
+    {
+        SaveFile("food/apple.png");
+        var status = TestServices.Status();
+        status.ReportUnreachable();
+        var controller = new PixelController(TestServices.Sender(_pico, _webRoot.Path, status: status), NullLogger<PixelController>.Instance);
+
+        var (code, _) = ResultAssert.Unwrap(await controller.SendToMatrix("food/apple.png"));
+
+        Assert.Equal(200, code);
+        Assert.Single(_pico.Requests);
+        Assert.Equal(PicoStatus.State.Online, status.Current);
+    }
+
     [Fact]
     public async Task SendToMatrix_HidesUnexpectedErrors()
     {
@@ -171,11 +187,24 @@ public class AutoSendControllerTests : IDisposable
     public void Dispose() => _webRoot.Dispose();
 
     // 2026-10-02 10:30 local (UTC clock, UTC zone)
+    private readonly PicoStatus _status = TestServices.Status();
+
     private AutoSendController Create(params AutoSendRule[] rules) =>
         new(TestServices.AutoSend(
             new AutoSendConfig { IntervalMinutes = 10, Rules = [.. rules] },
             _webRoot.Path,
-            new FakeTimeProvider(new DateTimeOffset(2026, 10, 2, 10, 30, 0, TimeSpan.Zero))));
+            new FakeTimeProvider(new DateTimeOffset(2026, 10, 2, 10, 30, 0, TimeSpan.Zero))),
+            _status);
+
+    [Fact]
+    public void Status_ReportsWhetherDisplayIsOff()
+    {
+        Assert.False(ResultAssert.Unwrap(Create().Status()).Body.GetProperty("displayOffline").GetBoolean());
+
+        _status.ReportUnreachable();
+
+        Assert.True(ResultAssert.Unwrap(Create().Status()).Body.GetProperty("displayOffline").GetBoolean());
+    }
 
     [Fact]
     public void Status_ReportsActiveRuleInterval()
@@ -234,5 +263,22 @@ public class DynamicControllerTests
             .Single();
 
         Assert.True(attr.NoStore);
+    }
+}
+
+public class DisplayControllerTests
+{
+    [Fact]
+    public void Status_ReportsCurrentState()
+    {
+        var status = TestServices.Status();
+        var controller = new DisplayController(status);
+        string State() => ResultAssert.Unwrap(controller.Status()).Body.GetProperty("display").GetString()!;
+
+        Assert.Equal("unknown", State());
+        status.ReportUnreachable();
+        Assert.Equal("offline", State());
+        status.ReportReachable();
+        Assert.Equal("online", State());
     }
 }

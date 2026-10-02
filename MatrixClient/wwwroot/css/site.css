@@ -198,6 +198,29 @@ body {
 .px-nav-link:hover { color: #ccc; }
 .px-nav-link.active { color: #e0e0e0; font-weight: 600; }
 
+/* Display on/off indicator */
+.px-display {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #777;
+}
+
+.px-display-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid #555;
+}
+
+.px-display-online { color: #aaa; }
+.px-display-online .px-display-dot { background: #6dbf6d; border-color: #6dbf6d; }
+.px-display-offline .px-display-dot { background: #555; }
+
+.px-autosend-paused { color: #888; }
+
 /* Schedule page */
 .sched-page-header {
   display: flex;

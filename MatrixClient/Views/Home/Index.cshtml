@@ -49,6 +49,7 @@
 			</div>
 			<div id="autoSendInfo" class="px-autosend-info" style="display:none">
 				<span id="activeRuleName"></span> &middot; every <span id="intervalMin"></span> min
+				<span id="autoSendPaused" class="px-autosend-paused" style="display:none">&middot; paused while display is off</span>
 			</div>
 		</div>
 	</div>
@@ -93,6 +94,11 @@
 				error: function (xhr) {
 					btn.prop('disabled', false).text('Send Pixels');
 					showError((xhr.responseJSON && xhr.responseJSON.error) || 'Request failed');
+				},
+				// A manual send always tries the matrix, so its outcome is the freshest on/off signal
+				complete: function () {
+					refreshDisplayStatus();
+					refreshAutoSendStatus();
 				}
 			});
 		});
@@ -111,6 +117,7 @@
 					$('#activeRuleName').text('no matching rule');
 					$('#autoSendInfo').show();
 				}
+				$('#autoSendPaused').toggle(!!s.displayOffline);
 			} else {
 				btn.text('Enable').removeClass('active');
 				$('#autoSendInfo').hide();

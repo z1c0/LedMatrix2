@@ -3,7 +3,7 @@ using MatrixClient.Services;
 
 namespace MatrixClient.Controllers;
 
-public class AutoSendController(AutoSendService autoSend) : Controller
+public class AutoSendController(AutoSendService autoSend, PicoStatus status) : Controller
 {
     [HttpPost]
     [Route("AutoSend/Enable")]
@@ -30,7 +30,9 @@ public class AutoSendController(AutoSendService autoSend) : Controller
         {
             enabled = autoSend.IsEnabled,
             activeRule = rule?.Name,
-            intervalMinutes = rule is null ? autoSend.Config.IntervalMinutes : autoSend.IntervalFor(rule)
+            intervalMinutes = rule is null ? autoSend.Config.IntervalMinutes : autoSend.IntervalFor(rule),
+            // Auto-send pauses while the display is off and catches up once it's back
+            displayOffline = status.IsOffline
         });
     }
 }

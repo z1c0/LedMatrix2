@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@inject MatrixClient.Services.PicoStatus PicoStatus
+<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
@@ -18,6 +19,14 @@
 			<a asp-controller="Home"     asp-action="Index" class="px-nav-link @(currentController == "Home"     ? "active" : "")">Gallery</a>
 			<a asp-controller="Schedule" asp-action="Index" class="px-nav-link @(currentController == "Schedule" ? "active" : "")">Schedule</a>
 			<a asp-controller="Draw"     asp-action="Index" class="px-nav-link @(currentController == "Draw"     ? "active" : "")">Draw</a>
+			@{
+				var displayState = MatrixClient.Controllers.DisplayController.StateName(PicoStatus.Current);
+				var displayLabel = displayState switch { "online" => "Display on", "offline" => "Display off", _ => "Display unknown" };
+			}
+			<span id="displayStatus" class="px-display px-display-@displayState" data-url="@Url.Action("Status", "Display")"
+				  title="Checked every minute and after each send">
+				<span class="px-display-dot"></span><span class="px-display-text">@displayLabel</span>
+			</span>
 		</nav>
 		<main role="main" class="pb-3">
 			@RenderBody()
