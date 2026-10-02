@@ -5,7 +5,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace MatrixClient.Services;
 
-public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFactory, IWebHostEnvironment env, WeatherService weatherService, ILogger<PixelSenderService> logger)
+public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFactory, IWebHostEnvironment env, WeatherService weatherService, TimeProvider time, ILogger<PixelSenderService> logger)
 {
     // The Pico's HTTP server handles one request at a time, so manual, draw and auto sends take turns
     private readonly SemaphoreSlim _sendLock = new(1, 1);
@@ -75,8 +75,8 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
 
     private Task<Image<Rgba32>> ResolveImageAsync(string path) => path switch
     {
-        "clock"    => Task.FromResult(ClockRenderer.Render()),
-        "calendar" => Task.FromResult(CalendarRenderer.Render()),
+        "clock"    => Task.FromResult(ClockRenderer.Render(time.GetLocalNow().DateTime)),
+        "calendar" => Task.FromResult(CalendarRenderer.Render(time.GetLocalNow().DateTime)),
         "weather"  => WeatherRenderer.RenderAsync(weatherService),
         _          => Task.FromResult(Image.Load<Rgba32>(ResolveDataPath(path)))
     };

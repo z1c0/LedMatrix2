@@ -24,7 +24,7 @@ public class PixelSenderServiceTests : IDisposable
             new FakeHttpClientFactory(pico),
             new FakeWebHostEnvironment(_webRoot.Path),
             weather,
-            NullLogger<PixelSenderService>.Instance);
+            TimeProvider.System, NullLogger<PixelSenderService>.Instance);
     }
 
     private void SaveImage(string relativePath, int size, Rgba32 fill)

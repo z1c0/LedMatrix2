@@ -3,6 +3,7 @@ namespace MatrixClient.Services;
 public class AutoSendBackgroundService(
     AutoSendService autoSend,
     PixelSenderService sender,
+    TimeProvider time,
     ILogger<AutoSendBackgroundService> logger) : BackgroundService
 {
     // Wake slightly after the minute boundary so the clock never renders the previous minute
@@ -15,8 +16,16 @@ public class AutoSendBackgroundService(
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await Task.Delay(DelayUntilNextMinute(DateTime.Now), stoppingToken);
-            await TickAsync(DateTime.Now);
+            await Task.Delay(DelayUntilNextMinute(time.GetLocalNow().DateTime), stoppingToken);
+            try
+            {
+                await TickAsync(time.GetLocalNow().DateTime);
+            }
+            catch (Exception ex)
+            {
+                // An unhandled exception here would stop the whole host
+                logger.LogError(ex, "Auto-send tick failed");
+            }
         }
     }
 

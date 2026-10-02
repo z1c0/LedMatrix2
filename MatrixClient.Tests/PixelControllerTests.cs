@@ -24,7 +24,7 @@ public class PixelControllerTests : IDisposable
         var weather = new WeatherService(new WeatherConfig(), new FakeHttpClientFactory(_pico), TimeProvider.System,
             NullLogger<WeatherService>.Instance);
         var sender = new PixelSenderService(new PicoConfig(), new FakeHttpClientFactory(_pico), env, weather,
-            NullLogger<PixelSenderService>.Instance);
+            TimeProvider.System, NullLogger<PixelSenderService>.Instance);
         return new PixelController(sender, NullLogger<PixelController>.Instance);
     }
 

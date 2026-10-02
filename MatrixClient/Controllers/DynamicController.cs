@@ -5,7 +5,7 @@ using MatrixClient.Services;
 
 namespace MatrixClient.Controllers;
 
-public class DynamicController(WeatherService weatherService) : Controller
+public class DynamicController(WeatherService weatherService, TimeProvider time) : Controller
 {
     private static readonly HashSet<string> KnownModes = ["clock", "calendar", "weather"];
 
@@ -15,8 +15,8 @@ public class DynamicController(WeatherService weatherService) : Controller
     {
         Image<Rgba32>? img = mode switch
         {
-            "clock"    => ClockRenderer.Render(),
-            "calendar" => CalendarRenderer.Render(),
+            "clock"    => ClockRenderer.Render(time.GetLocalNow().DateTime),
+            "calendar" => CalendarRenderer.Render(time.GetLocalNow().DateTime),
             "weather"  => await WeatherRenderer.RenderAsync(weatherService),
             _          => null
         };

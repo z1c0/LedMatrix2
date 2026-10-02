@@ -36,8 +36,10 @@ public sealed class FakeHttpHandler(Func<HttpRequestMessage, CancellationToken, 
 public sealed class FakeTimeProvider(DateTimeOffset start) : TimeProvider
 {
     public DateTimeOffset Now { get; set; } = start;
+    public TimeZoneInfo Zone { get; set; } = TimeZoneInfo.Utc;
 
     public override DateTimeOffset GetUtcNow() => Now;
+    public override TimeZoneInfo LocalTimeZone => Zone;
 
     public void Advance(TimeSpan by) => Now += by;
 }

@@ -19,13 +19,13 @@ public class AutoSendBackgroundServiceTests : IDisposable
     private (AutoSendBackgroundService Service, AutoSendService AutoSend) Create(params AutoSendRule[] rules)
     {
         var env = new FakeWebHostEnvironment(_webRoot.Path);
-        var autoSend = new AutoSendService(new AutoSendConfig { IntervalMinutes = 10, Rules = [.. rules] }, env);
+        var autoSend = new AutoSendService(new AutoSendConfig { IntervalMinutes = 10, Rules = [.. rules] }, env, TimeProvider.System);
         var weather = new WeatherService(new WeatherConfig(), new FakeHttpClientFactory(_pico), TimeProvider.System,
             NullLogger<WeatherService>.Instance);
         var sender = new PixelSenderService(new PicoConfig(), new FakeHttpClientFactory(_pico), env, weather,
-            NullLogger<PixelSenderService>.Instance);
+            TimeProvider.System, NullLogger<PixelSenderService>.Instance);
         autoSend.Enable();
-        return (new AutoSendBackgroundService(autoSend, sender, NullLogger<AutoSendBackgroundService>.Instance), autoSend);
+        return (new AutoSendBackgroundService(autoSend, sender, TimeProvider.System, NullLogger<AutoSendBackgroundService>.Instance), autoSend);
     }
 
     private static AutoSendRule ClockRule(string name, string from, string to, int? interval = null) =>
@@ -107,13 +107,13 @@ public class AutoSendBackgroundServiceTests : IDisposable
         var pico = new FakeHttpHandler(_ => new HttpResponseMessage(
             Interlocked.Increment(ref calls) == 1 ? HttpStatusCode.InternalServerError : HttpStatusCode.OK));
         var env = new FakeWebHostEnvironment(_webRoot.Path);
-        var autoSend = new AutoSendService(new AutoSendConfig { IntervalMinutes = 10, Rules = [ClockRule("Clock", "00:00", "23:59")] }, env);
+        var autoSend = new AutoSendService(new AutoSendConfig { IntervalMinutes = 10, Rules = [ClockRule("Clock", "00:00", "23:59")] }, env, TimeProvider.System);
         var weather = new WeatherService(new WeatherConfig(), new FakeHttpClientFactory(pico), TimeProvider.System,
             NullLogger<WeatherService>.Instance);
         var sender = new PixelSenderService(new PicoConfig(), new FakeHttpClientFactory(pico), env, weather,
-            NullLogger<PixelSenderService>.Instance);
+            TimeProvider.System, NullLogger<PixelSenderService>.Instance);
         autoSend.Enable();
-        var service = new AutoSendBackgroundService(autoSend, sender, NullLogger<AutoSendBackgroundService>.Instance);
+        var service = new AutoSendBackgroundService(autoSend, sender, TimeProvider.System, NullLogger<AutoSendBackgroundService>.Instance);
 
         await service.TickAsync(TenAm);
         await service.TickAsync(TenAm.AddMinutes(1));

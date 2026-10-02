@@ -14,7 +14,7 @@ public class AutoSendServiceTests : IDisposable
     public void Dispose() => _webRoot.Dispose();
 
     private AutoSendService Create(params AutoSendRule[] rules) =>
-        new(new AutoSendConfig { Rules = [.. rules] }, new FakeWebHostEnvironment(_webRoot.Path));
+        new(new AutoSendConfig { Rules = [.. rules] }, new FakeWebHostEnvironment(_webRoot.Path), TimeProvider.System);
 
     private static AutoSendRule Rule(string name, string from, string to, params string[] days) =>
         new() { Name = name, From = from, To = to, Days = [.. days], Category = "food" };

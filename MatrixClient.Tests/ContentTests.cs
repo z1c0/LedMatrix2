@@ -43,6 +43,10 @@ public class ContentTests
     }
 
     [Fact]
+    public void Rules_PassStartupValidation() =>
+        Assert.Empty(LoadRules().Validate(DataDir));
+
+    [Fact]
     public void Rules_HaveValidDaysAndTimes()
     {
         foreach (var rule in LoadRules().Rules)
