@@ -13,7 +13,10 @@ var autoSendConfig = File.Exists(rulesPath)
     : new AutoSendConfig();
 
 builder.Services.AddSingleton(autoSendConfig);
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<AutoSendService>();
+var picoConfig = builder.Configuration.GetSection("Pico").Get<PicoConfig>() ?? new PicoConfig();
+builder.Services.AddSingleton(picoConfig);
 builder.Services.AddSingleton<PixelSenderService>();
 builder.Services.AddHostedService<AutoSendBackgroundService>();
 

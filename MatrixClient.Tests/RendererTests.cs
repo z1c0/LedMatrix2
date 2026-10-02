@@ -128,6 +128,16 @@ public class WeatherRendererTests
     }
 
     [Fact]
+    public void RenderUnavailable_ShowsOnlyDashes()
+    {
+        using var img = WeatherRenderer.RenderUnavailable();
+
+        // "--" at scale 2: 14px wide, the dash is glyph row 2 → y 15..16
+        Assert.Equal((9, 15, 22, 16), ImageAssert.Bounds(img, UnitColor));
+        Assert.Equal(24, ImageAssert.CountLit(img, img[0, 0]));
+    }
+
+    [Fact]
     public void Render_RoundsTemperature()
     {
         using var rounded = WeatherRenderer.Render(new WeatherService.WeatherData(4.6, 45, "°C"));

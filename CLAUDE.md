@@ -46,7 +46,7 @@ No build step. Copy `Matrix/main.py` and a `secrets.py` (from `Matrix/secrets.py
 - **Pixel format** — each pixel is 6 hex chars (`RRGGBB`); total payload is always 6,144 chars.
 - **Transparency** — pixels with alpha < 50 are treated as black (`000000`), not skipped.
 - **Images live in `MatrixClient/wwwroot/data/`** — `HomeController` reads that directory to populate the gallery; no DB or upload UI yet.
-- **Pico IP is hardcoded** in `MatrixClient/Controllers/PixelController.cs` (`http://192.168.1.41/`). Update this constant when the Pico's IP changes.
+- **Pico URL** is configured under `Pico:Url` in `MatrixClient/appsettings.json` (override with env var `Pico__Url`), with `Pico:TimeoutSeconds` for the send timeout.
 - **No `secrets.py` in source control** — create it from `Matrix/secrets.py.example` before deploying to the Pico.
 
 ## Dependencies

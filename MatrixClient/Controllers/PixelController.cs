@@ -11,7 +11,6 @@ public class PixelController(PixelSenderService sender, ILogger<PixelController>
     {
         try
         {
-            fileName = System.Net.WebUtility.UrlDecode(fileName);
             await sender.SendAsync(fileName);
         }
         catch (Exception e)

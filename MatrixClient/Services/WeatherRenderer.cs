@@ -13,6 +13,8 @@ public static class WeatherRenderer
     private static readonly byte[] IconThunder = [56, 124, 255, 24, 48, 24, 32, 0];
     private static readonly byte[] IconFog     = [255, 0, 255, 0, 255, 0, 255, 0];
 
+    private static readonly Rgba32 Background = new(0, 0, 16);
+
     private static readonly Rgba32 ColSun     = new(255, 215, 0);
     private static readonly Rgba32 ColCloud   = new(180, 180, 200);
     private static readonly Rgba32 ColRain    = new(80,  140, 255);
@@ -22,11 +24,11 @@ public static class WeatherRenderer
     private static readonly Rgba32 ColUnit    = new(100, 100, 100);
 
     public static async Task<Image<Rgba32>> RenderAsync(WeatherService weather) =>
-        Render(await weather.GetCurrentAsync());
+        await weather.GetCurrentAsync() is { } data ? Render(data) : RenderUnavailable();
 
     public static Image<Rgba32> Render(WeatherService.WeatherData data)
     {
-        var img  = new Image<Rgba32>(32, 32, new Rgba32(0, 0, 16));
+        var img  = new Image<Rgba32>(32, 32, Background);
 
         // Icon — centered horizontally, top area (y=1)
         var (icon, iconColor) = GetIcon(data.WeatherCode);
@@ -42,6 +44,15 @@ public static class WeatherRenderer
         var uw = PixelFont.StringWidth(data.Unit);
         PixelFont.DrawString(img, data.Unit, (32 - uw) / 2, 25, ColUnit);
 
+        return img;
+    }
+
+    // Shown instead of a plausible-looking fake reading when there's no fresh data
+    public static Image<Rgba32> RenderUnavailable()
+    {
+        var img = new Image<Rgba32>(32, 32, Background);
+        var w   = PixelFont.StringWidth("--", scale: 2);
+        PixelFont.DrawString(img, "--", (32 - w) / 2, 11, ColUnit, scale: 2);
         return img;
     }
 

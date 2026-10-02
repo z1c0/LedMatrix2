@@ -11,13 +11,13 @@
 
 ### Medium
 
-- [ ] **Path traversal in `Pixels/SendToMatrix`.** The `fileName` goes straight into `Path.Combine(env.WebRootPath, "data", path)` in `PixelSenderService.ResolveImageAsync`. Values like `../../x.png` or absolute paths (`Path.Combine` drops earlier segments when given a rooted path) can load any image on the filesystem. The `e.Message` returned to the client also tells you whether a file exists. Fix: resolve the full path and check it starts with the data root, or only accept paths that are in the gallery list.
-- [ ] **Double URL-decoding.** MVC model binding already decodes `fileName`, and `PixelController` then calls `WebUtility.UrlDecode` again. File names containing `+` or `%` break (`+` turns into a space). Remove the extra decode.
-- [ ] **No HTTP timeout to the Pico.** `httpClientFactory.CreateClient()` uses the default 100 s timeout. If the Pico is offline, the "Send" button hangs for over a minute and the auto-send loop stalls. Register a named or typed client with a short timeout (around 5 s).
-- [ ] **The Pico URL is hardcoded** (`PixelSenderService.cs:9`, `http://192.168.1.225/`). Move it to `appsettings.json` / an environment variable (`Pico:Url`) so a DHCP change doesn't need a rebuild and redeploy.
-- [ ] **Manual and automatic sends can overlap.** A manual send, a Draw send and the background loop can all POST to the Pico at the same time. The CircuitPython HTTP server handles one request at a time. Serialize sends in `PixelSenderService` with a `SemaphoreSlim(1)`.
-- [ ] **The clock lags by up to about a minute.** The background loop uses `Task.Delay(1 min)` and isn't aligned to minute boundaries, so the displayed time can be up to ~59 s behind (plus drift from the time each send takes). Align the next tick to the start of the next minute, and send the clock right away when its rule becomes active.
-- [ ] **Misleading weather fallback.** `WeatherService._cached` starts as `(0, 0, "°C")`. If the first Open-Meteo call fails, the matrix shows "0 °C, sunny" as if it were real data. Render an error or "--" state instead. Also, after a failure the cache expiry isn't set, so every call retries right away. Add a short back-off.
+- [x] **Path traversal in `Pixels/SendToMatrix`.** The `fileName` goes straight into `Path.Combine(env.WebRootPath, "data", path)` in `PixelSenderService.ResolveImageAsync`. Values like `../../x.png` or absolute paths (`Path.Combine` drops earlier segments when given a rooted path) can load any image on the filesystem. The `e.Message` returned to the client also tells you whether a file exists. Fix: resolve the full path and check it starts with the data root, or only accept paths that are in the gallery list.
+- [x] **Double URL-decoding.** MVC model binding already decodes `fileName`, and `PixelController` then calls `WebUtility.UrlDecode` again. File names containing `+` or `%` break (`+` turns into a space). Remove the extra decode.
+- [x] **No HTTP timeout to the Pico.** `httpClientFactory.CreateClient()` uses the default 100 s timeout. If the Pico is offline, the "Send" button hangs for over a minute and the auto-send loop stalls. Register a named or typed client with a short timeout (around 5 s).
+- [x] **The Pico URL is hardcoded** (`PixelSenderService.cs:9`, `http://192.168.1.225/`). Move it to `appsettings.json` / an environment variable (`Pico:Url`) so a DHCP change doesn't need a rebuild and redeploy.
+- [x] **Manual and automatic sends can overlap.** A manual send, a Draw send and the background loop can all POST to the Pico at the same time. The CircuitPython HTTP server handles one request at a time. Serialize sends in `PixelSenderService` with a `SemaphoreSlim(1)`.
+- [x] **The clock lags by up to about a minute.** The background loop uses `Task.Delay(1 min)` and isn't aligned to minute boundaries, so the displayed time can be up to ~59 s behind (plus drift from the time each send takes). Align the next tick to the start of the next minute, and send the clock right away when its rule becomes active.
+- [x] **Misleading weather fallback.** `WeatherService._cached` starts as `(0, 0, "°C")`. If the first Open-Meteo call fails, the matrix shows "0 °C, sunny" as if it were real data. Render an error or "--" state instead. Also, after a failure the cache expiry isn't set, so every call retries right away. Add a short back-off.
 
 ### Low / cleanup
 
@@ -39,4 +39,4 @@
 
 ### Docs drift (CLAUDE.md)
 
-- [ ] CLAUDE.md says the Pico IP lives in `PixelController.cs` as `http://192.168.1.41/`. It's actually in `Services/PixelSenderService.cs` and is `http://192.168.1.225/`. The data-flow section also credits `PixelController` with the conversion, which `PixelSenderService` now does. The dependencies list is missing `YamlDotNet`.
+- [ ] ~~CLAUDE.md says the Pico IP lives in `PixelController.cs`~~ (fixed: now documented as `Pico:Url` config). The data-flow section also credits `PixelController` with the conversion, which `PixelSenderService` now does. The dependencies list is missing `YamlDotNet`.

@@ -14,12 +14,13 @@ public class PixelSenderServiceTests : IDisposable
 
     public void Dispose() => _webRoot.Dispose();
 
-    private PixelSenderService CreateSender(FakeHttpHandler pico)
+    private PixelSenderService CreateSender(FakeHttpHandler pico, PicoConfig? config = null)
     {
-        // The weather service is only needed for the "weather" dynamic mode; fail loudly if it's hit unexpectedly
+        // The weather service is only needed for the "weather" dynamic mode; its API always fails here
         var weatherHttp = new FakeHttpClientFactory(FakeHttpHandler.Returning(HttpStatusCode.InternalServerError));
-        var weather = new WeatherService(new WeatherConfig(), weatherHttp, NullLogger<WeatherService>.Instance);
+        var weather = new WeatherService(new WeatherConfig(), weatherHttp, TimeProvider.System, NullLogger<WeatherService>.Instance);
         return new PixelSenderService(
+            config ?? new PicoConfig(),
             new FakeHttpClientFactory(pico),
             new FakeWebHostEnvironment(_webRoot.Path),
             weather,
@@ -112,7 +113,7 @@ public class PixelSenderServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SendAsync_WeatherFallsBackToCachedDataWhenApiFails()
+    public async Task SendAsync_WeatherStillSendsWhenApiFails()
     {
         var pico = FakeHttpHandler.Returning(HttpStatusCode.OK);
 
@@ -141,5 +142,122 @@ public class PixelSenderServiceTests : IDisposable
 
         Assert.Contains("400", ex.Message);
         Assert.Contains("bad length", ex.Message);
+    }
+
+    [Fact]
+    public async Task SendAsync_AcceptsPathsThatStayInsideDataFolder()
+    {
+        SaveImage("food/apple.png", 32, new Rgba32(255, 0, 0));
+        var pico = FakeHttpHandler.Returning(HttpStatusCode.OK);
+
+        await CreateSender(pico).SendAsync("retro/../food/apple.png");
+
+        Assert.Single(pico.Requests);
+    }
+
+    [Theory]
+    [InlineData("../outside.png")]
+    [InlineData("food/../../outside.png")]
+    [InlineData("../data-evil/outside.png")]   // shares the "data" prefix but is a sibling folder
+    public async Task SendAsync_RejectsPathsOutsideDataFolder(string path)
+    {
+        // Valid images exist at the target locations, so only the path check can stop them
+        SaveImage("../outside.png", 32, new Rgba32(255, 0, 0));
+        SaveImage("../data-evil/outside.png", 32, new Rgba32(255, 0, 0));
+        var pico = FakeHttpHandler.Returning(HttpStatusCode.OK);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => CreateSender(pico).SendAsync(path));
+        Assert.Empty(pico.Requests);
+    }
+
+    [Fact]
+    public async Task SendAsync_RejectsAbsolutePaths()
+    {
+        SaveImage("../outside.png", 32, new Rgba32(255, 0, 0));
+        var absolute = Path.Combine(_webRoot.Path, "outside.png");
+        var pico = FakeHttpHandler.Returning(HttpStatusCode.OK);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => CreateSender(pico).SendAsync(absolute));
+        Assert.Empty(pico.Requests);
+    }
+
+    [Fact]
+    public async Task SendAsync_ReportsMissingImageWithoutFullPath()
+    {
+        var pico = FakeHttpHandler.Returning(HttpStatusCode.OK);
+
+        var ex = await Assert.ThrowsAsync<FileNotFoundException>(() => CreateSender(pico).SendAsync("food/nope.png"));
+
+        Assert.Equal("Image not found: food/nope.png", ex.Message);
+    }
+
+    [Fact]
+    public async Task SendRawAsync_PostsToConfiguredUrl()
+    {
+        var pico = FakeHttpHandler.Returning(HttpStatusCode.OK);
+
+        await CreateSender(pico, new PicoConfig { Url = "http://10.0.0.7/" }).SendRawAsync("00");
+
+        Assert.Equal(new Uri("http://10.0.0.7/"), Assert.Single(pico.Requests).Request.RequestUri);
+    }
+
+    [Fact]
+    public async Task SendRawAsync_TimesOutWhenPicoDoesNotAnswer()
+    {
+        var pico = new FakeHttpHandler(async (_, ct) =>
+        {
+            await Task.Delay(Timeout.Infinite, ct);
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        });
+        var sender = CreateSender(pico, new PicoConfig { TimeoutSeconds = 0.1 });
+
+        var ex = await Assert.ThrowsAsync<TimeoutException>(() => sender.SendRawAsync("00"));
+
+        Assert.Contains("did not respond", ex.Message);
+    }
+
+    [Fact]
+    public async Task SendRawAsync_ReleasesLockAfterTimeout()
+    {
+        var calls = 0;
+        var pico = new FakeHttpHandler(async (_, ct) =>
+        {
+            if (Interlocked.Increment(ref calls) == 1)
+                await Task.Delay(Timeout.Infinite, ct);
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        });
+        var sender = CreateSender(pico, new PicoConfig { TimeoutSeconds = 0.1 });
+
+        await Assert.ThrowsAsync<TimeoutException>(() => sender.SendRawAsync("00"));
+        await sender.SendRawAsync("00");
+
+        Assert.Equal(2, calls);
+    }
+
+    [Fact]
+    public async Task SendRawAsync_NeverSendsConcurrently()
+    {
+        int inFlight = 0, maxInFlight = 0;
+        var pico = new FakeHttpHandler(async (_, ct) =>
+        {
+            var now = Interlocked.Increment(ref inFlight);
+            InterlockedMax(ref maxInFlight, now);
+            await Task.Delay(20, ct);
+            Interlocked.Decrement(ref inFlight);
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        });
+        var sender = CreateSender(pico);
+
+        await Task.WhenAll(Enumerable.Range(0, 5).Select(_ => Task.Run(() => sender.SendRawAsync("00"))));
+
+        Assert.Equal(5, pico.Requests.Count);
+        Assert.Equal(1, maxInFlight);
+    }
+
+    private static void InterlockedMax(ref int target, int value)
+    {
+        int current;
+        while (value > (current = Volatile.Read(ref target)) &&
+               Interlocked.CompareExchange(ref target, value, current) != current) { }
     }
 }

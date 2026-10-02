@@ -1,12 +1,14 @@
 using System.Text;
+using MatrixClient.Models;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace MatrixClient.Services;
 
-public class PixelSenderService(IHttpClientFactory httpClientFactory, IWebHostEnvironment env, WeatherService weatherService, ILogger<PixelSenderService> logger)
+public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFactory, IWebHostEnvironment env, WeatherService weatherService, ILogger<PixelSenderService> logger)
 {
-    private const string PicoUrl = "http://192.168.1.225/";
+    // The Pico's HTTP server handles one request at a time, so manual, draw and auto sends take turns
+    private readonly SemaphoreSlim _sendLock = new(1, 1);
 
     public async Task SendAsync(string relativePath)
     {
@@ -39,13 +41,35 @@ public class PixelSenderService(IHttpClientFactory httpClientFactory, IWebHostEn
 
     public async Task SendRawAsync(string hexPayload)
     {
-        var content  = new StringContent(hexPayload, Encoding.UTF8, "application/text");
-        var response = await httpClientFactory.CreateClient().PostAsync(PicoUrl, content);
-        if (!response.IsSuccessStatusCode)
+        await _sendLock.WaitAsync();
+        try
         {
-            var error = await response.Content.ReadAsStringAsync();
-            logger.LogWarning("Pico returned {StatusCode}: {Error}", (int)response.StatusCode, error);
-            throw new Exception($"Pico returned {(int)response.StatusCode}: {error}");
+            using var content = new StringContent(hexPayload, Encoding.UTF8, "application/text");
+            using var cts     = new CancellationTokenSource(TimeSpan.FromSeconds(pico.TimeoutSeconds));
+
+            HttpResponseMessage response;
+            try
+            {
+                response = await httpClientFactory.CreateClient().PostAsync(pico.Url, content, cts.Token);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested)
+            {
+                throw new TimeoutException($"Pico at {pico.Url} did not respond within {pico.TimeoutSeconds} s");
+            }
+
+            using (response)
+            {
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    logger.LogWarning("Pico returned {StatusCode}: {Error}", (int)response.StatusCode, error);
+                    throw new Exception($"Pico returned {(int)response.StatusCode}: {error}");
+                }
+            }
+        }
+        finally
+        {
+            _sendLock.Release();
         }
     }
 
@@ -54,6 +78,20 @@ public class PixelSenderService(IHttpClientFactory httpClientFactory, IWebHostEn
         "clock"    => Task.FromResult(ClockRenderer.Render()),
         "calendar" => Task.FromResult(CalendarRenderer.Render()),
         "weather"  => WeatherRenderer.RenderAsync(weatherService),
-        _          => Task.FromResult(Image.Load<Rgba32>(Path.Combine(env.WebRootPath, "data", path)))
+        _          => Task.FromResult(Image.Load<Rgba32>(ResolveDataPath(path)))
     };
+
+    // Maps a gallery path like "food/apple.png" to disk, refusing anything outside wwwroot/data
+    private string ResolveDataPath(string relativePath)
+    {
+        var dataRoot = Path.GetFullPath(Path.Combine(env.WebRootPath, "data")) + Path.DirectorySeparatorChar;
+        var fullPath = Path.GetFullPath(Path.Combine(dataRoot, relativePath));
+
+        if (!fullPath.StartsWith(dataRoot, StringComparison.Ordinal))
+            throw new ArgumentException($"Invalid image path: {relativePath}");
+        if (!File.Exists(fullPath))
+            throw new FileNotFoundException($"Image not found: {relativePath}");
+
+        return fullPath;
+    }
 }
