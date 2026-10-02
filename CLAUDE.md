@@ -13,7 +13,7 @@ Two loosely coupled components communicating over HTTP:
 | `Matrix/` | CircuitPython on Raspberry Pi Pico W | Hardware server — drives the 32×32 RGB LED matrix |
 | `MatrixClient/` | C# ASP.NET Core MVC (.NET 10) | Web UI — selects images, converts pixels, POSTs to Pico |
 
-**Data flow**: User selects a 32×32 PNG → `PixelController` converts it to a 6,144-char hex string (one 6-char RGB value per pixel) → HTTP POST to Pico W IP → `main.py` parses hex, converts to RGB565, writes to framebuffer.
+**Data flow**: User selects a 32×32 image (or a dynamic mode: clock/calendar/weather) → `PixelSenderService` converts it to a 6,144-char hex string (one 6-char RGB value per pixel) → HTTP POST to the Pico W → `main.py` parses hex, converts to RGB565, writes to framebuffer. `AutoSendBackgroundService` does the same on a schedule from `rules.yaml`.
 
 ## Build & Run
 
@@ -42,10 +42,12 @@ No build step. Copy `Matrix/main.py` and a `secrets.py` (from `Matrix/secrets.py
 
 ## Key Conventions
 
-- **32×32 strictly required** — both the Pico and `PixelController` validate dimensions and reject other sizes.
+- **32×32 strictly required** — both the Pico and `PixelSenderService` validate dimensions and reject other sizes.
 - **Pixel format** — each pixel is 6 hex chars (`RRGGBB`); total payload is always 6,144 chars.
 - **Transparency** — pixels with alpha < 50 are treated as black (`000000`), not skipped.
-- **Images live in `MatrixClient/wwwroot/data/`** — `HomeController` reads that directory to populate the gallery; no DB or upload UI yet.
+- **Images live in `MatrixClient/wwwroot/data/<category>/`** — `GalleryService` lists them (image extensions only, hidden files skipped) and confines send paths to that folder; no DB or upload UI yet.
+- **Dynamic modes** (clock, calendar, weather) are registered in one place, `DynamicImageService`; the gallery, auto-send and validation all read from it.
+- **Schedule rules** use `[from, to)` windows with `24:00` for end of day; where rules overlap, the one listed first wins (shown on the Schedule page and logged at startup).
 - **Time zone** — clock, calendar and schedule use `TimeZone` from `appsettings.json` (`Europe/Vienna`) via an injected `TimeProvider`, not the host TZ; never use `DateTime.Now` directly. The Dockerfile copies tzdata into the chiseled image for this.
 - **`rules.yaml` is validated at startup** (`AutoSendConfig.Validate`); a bad rule stops the app with a list of errors. `enabled_on_startup` sets the auto-send state after a restart.
 - **Pico URL** is configured under `Pico:Url` in `MatrixClient/appsettings.json` (override with env var `Pico__Url`), with `Pico:TimeoutSeconds` for the send timeout.
@@ -53,5 +55,5 @@ No build step. Copy `Matrix/main.py` and a `secrets.py` (from `Matrix/secrets.py
 
 ## Dependencies
 
-- **MatrixClient**: `SixLabors.ImageSharp 3.1.11` for image decoding/pixel access (declared in `MatrixClient/MatrixClient.csproj`).
+- **MatrixClient**: `SixLabors.ImageSharp 3.1.11` for image decoding/pixel access, `YamlDotNet` for `rules.yaml` (declared in `MatrixClient/MatrixClient.csproj`).
 - **Matrix**: `adafruit_httpserver`, `rgbmatrix` (CircuitPython libraries; installed on the device, not via pip).

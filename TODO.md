@@ -21,22 +21,22 @@
 
 ### Low / cleanup
 
-- [ ] **Dynamic modes are listed in three places:** `DynamicController.KnownModes`, `AutoSendService.GetImagePath` and `PixelSenderService.ResolveImageAsync`, plus the hardcoded `<img>`s in `Views/Home/Index.cshtml`. Use one registry such as `IDictionary<string, Func<Task<Image<Rgba32>>>>`. `DynamicController.IsDynamic` isn't used anywhere.
-- [ ] **`SendAsync` and `SendRawAsync` duplicate the POST and error handling.** Have `SendAsync` build the hex string and call `SendRawAsync`. Also dispose the `HttpResponseMessage` and the `JsonDocument` (in `WeatherService`).
-- [ ] **`Draw/Send` only checks the length.** It doesn't check that the payload is hex. Validate with a regex (`^[0-9A-Fa-f]{6144}$`) before forwarding to the Pico. Use `BadRequest` instead of `throw new Exception(...)` for flow control.
-- [ ] **Generic `Exception` with `e.Message` sent to the client** in the controllers. Use specific exception types and return a fixed user-facing message; keep the details in the logs.
-- [ ] **`HomeController` uses `Directory.GetCurrentDirectory()`** to build the data path, while `AutoSendService` uses `env.WebRootPath`. Inject `IWebHostEnvironment` and use `WebRootPath` everywhere; the current approach breaks when the app is started from another directory.
-- [ ] **`Directory.GetFiles(dir, "*.*")`** picks up any file (`.DS_Store`, `Thumbs.db`, …). Auto-send could choose one at random and fail. Filter by image extension (`.png`, `.bmp`, `.jpg`).
-- [ ] **Rule time boundaries.** `to: "23:59"` is compared with `<=` against `TimeOfDay`, so the last 59 seconds of the day match nothing. Rules that cross midnight (`from > to`) aren't supported, and they'd draw with a negative height on the Schedule page. Consider an exclusive `to` with `24:00` allowed, or explicit wrap-around support.
-- [ ] **Overlapping rules: the first match wins without any warning.** For example, "Evening Clock" never runs on Fri/Sat because "Gaming Night" comes earlier in the list. The Schedule page draws both blocks on top of each other. Show precedence in the UI or warn about overlaps at startup.
-- [ ] **`/AutoSend/Status` always reports the global `IntervalMinutes`,** even when the active rule overrides it (for example the clock rules at 1 min). Return `rule.IntervalMinutes ?? Config.IntervalMinutes`.
-- [ ] **Dynamic previews can be cached by the browser.** `/Dynamic/Preview/{mode}` has no cache headers, so the gallery thumbnails for clock/weather can go stale. Add `[ResponseCache(NoStore = true)]`.
-- [ ] **`WeatherConfig.TemperatureUnit` isn't validated.** Any value other than `fahrenheit` is labelled °C but still sent to the API as-is. Use an enum.
+- [x] **Dynamic modes are listed in three places:** `DynamicController.KnownModes`, `AutoSendService.GetImagePath` and `PixelSenderService.ResolveImageAsync`, plus the hardcoded `<img>`s in `Views/Home/Index.cshtml`. Use one registry such as `IDictionary<string, Func<Task<Image<Rgba32>>>>`. `DynamicController.IsDynamic` isn't used anywhere.
+- [x] **`SendAsync` and `SendRawAsync` duplicate the POST and error handling.** Have `SendAsync` build the hex string and call `SendRawAsync`. Also dispose the `HttpResponseMessage` and the `JsonDocument` (in `WeatherService`).
+- [x] **`Draw/Send` only checks the length.** It doesn't check that the payload is hex. Validate with a regex (`^[0-9A-Fa-f]{6144}$`) before forwarding to the Pico. Use `BadRequest` instead of `throw new Exception(...)` for flow control.
+- [x] **Generic `Exception` with `e.Message` sent to the client** in the controllers. Use specific exception types and return a fixed user-facing message; keep the details in the logs.
+- [x] **`HomeController` uses `Directory.GetCurrentDirectory()`** to build the data path, while `AutoSendService` uses `env.WebRootPath`. Inject `IWebHostEnvironment` and use `WebRootPath` everywhere; the current approach breaks when the app is started from another directory.
+- [x] **`Directory.GetFiles(dir, "*.*")`** picks up any file (`.DS_Store`, `Thumbs.db`, …). Auto-send could choose one at random and fail. Filter by image extension (`.png`, `.bmp`, `.jpg`).
+- [x] **Rule time boundaries.** `to: "23:59"` is compared with `<=` against `TimeOfDay`, so the last 59 seconds of the day match nothing. Rules that cross midnight (`from > to`) aren't supported, and they'd draw with a negative height on the Schedule page. Consider an exclusive `to` with `24:00` allowed, or explicit wrap-around support.
+- [x] **Overlapping rules: the first match wins without any warning.** For example, "Evening Clock" never runs on Fri/Sat because "Gaming Night" comes earlier in the list. The Schedule page draws both blocks on top of each other. Show precedence in the UI or warn about overlaps at startup.
+- [x] **`/AutoSend/Status` always reports the global `IntervalMinutes`,** even when the active rule overrides it (for example the clock rules at 1 min). Return `rule.IntervalMinutes ?? Config.IntervalMinutes`.
+- [x] **Dynamic previews can be cached by the browser.** `/Dynamic/Preview/{mode}` has no cache headers, so the gallery thumbnails for clock/weather can go stale. Add `[ResponseCache(NoStore = true)]`.
+- [x] **`WeatherConfig.TemperatureUnit` isn't validated.** Any value other than `fahrenheit` is labelled °C but still sent to the API as-is. Use an enum.
 - [x] **Dockerfile:** it runs `dotnet build -o /app` and then `dotnet publish -o /app` into the same folder, which is redundant and mixes outputs. Publish only (`dotnet publish -c Release -o /app/publish`) and copy from there. There's no `.dockerignore`, so `bin/`, `obj/` and `.vscode/` go into the build context.
-- [ ] **`UseHttpsRedirection` in a container that only serves HTTP on 8080** logs "Failed to determine the https port" and does nothing. Remove it, or configure `ForwardedHeaders` if TLS ends at the ingress.
-- [ ] **Unused `using System.Globalization;`** in `Program.cs`. `HomeController` uses tabs and a classic constructor, while the other controllers use spaces and primary constructors.
+- [x] **`UseHttpsRedirection` in a container that only serves HTTP on 8080** logs "Failed to determine the https port" and does nothing. Remove it, or configure `ForwardedHeaders` if TLS ends at the ingress.
+- [x] **Unused `using System.Globalization;`** in `Program.cs`. `HomeController` uses tabs and a classic constructor, while the other controllers use spaces and primary constructors.
 - [x] **No tests.** `PixelFont`, the renderers (snapshot of the pixel output), rule matching and the hex encoding are all easy to unit-test.
 
 ### Docs drift (CLAUDE.md)
 
-- [ ] ~~CLAUDE.md says the Pico IP lives in `PixelController.cs`~~ (fixed: now documented as `Pico:Url` config). The data-flow section also credits `PixelController` with the conversion, which `PixelSenderService` now does. The dependencies list is missing `YamlDotNet`.
+- [x] CLAUDE.md said the Pico IP lives in `PixelController.cs` (now documented as `Pico:Url` config). The data-flow section also credited `PixelController` with the conversion, which `PixelSenderService` does. The dependencies list was missing `YamlDotNet`.

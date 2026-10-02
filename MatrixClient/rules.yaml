@@ -11,7 +11,7 @@ rules:
   - name: Gaming Night
     days: [Friday, Saturday]
     from: "20:00"
-    to: "23:59"
+    to: "24:00"
     category: retro
 
   - name: Weekend RPG
@@ -30,7 +30,7 @@ rules:
   - name: Evening Clock
     days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
     from: "22:00"
-    to: "23:59"
+    to: "24:00"
     category: clock
     interval_minutes: 1
 

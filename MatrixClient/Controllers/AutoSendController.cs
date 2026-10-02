@@ -30,7 +30,7 @@ public class AutoSendController(AutoSendService autoSend) : Controller
         {
             enabled = autoSend.IsEnabled,
             activeRule = rule?.Name,
-            intervalMinutes = autoSend.Config.IntervalMinutes
+            intervalMinutes = rule is null ? autoSend.Config.IntervalMinutes : autoSend.IntervalFor(rule)
         });
     }
 }

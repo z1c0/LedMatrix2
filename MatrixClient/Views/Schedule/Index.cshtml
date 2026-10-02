@@ -46,6 +46,20 @@ else
         }
     </div>
 
+    var overlaps = Model.DescribeOverlaps();
+    if (overlaps.Count > 0)
+    {
+        <div class="sched-overlaps">
+            <div class="sched-overlaps-title">Overlaps — the rule listed first in <code>rules.yaml</code> wins</div>
+            <ul>
+                @foreach (var overlap in overlaps)
+                {
+                    <li>@overlap</li>
+                }
+            </ul>
+        </div>
+    }
+
     <div class="sched-wrap">
         <div class="sched-times">
             @for (var h = 0; h < 24; h++)
@@ -70,7 +84,7 @@ else
                             var top    = Pct(ToMinutes(rule.From));
                             var height = Pct(ToMinutes(rule.To) - ToMinutes(rule.From));
                             <div class="sched-rule-block"
-                                 style="top:@top;height:@height;background:@color"
+                                 style="top:@top;height:@height;background:@color;z-index:@(Model.Rules.Count - i)"
                                  title="@rule.Name (@rule.From – @rule.To)">
                                 <div class="sched-rule-name">@rule.Name</div>
                                 <div class="sched-rule-cat">@rule.Category</div>

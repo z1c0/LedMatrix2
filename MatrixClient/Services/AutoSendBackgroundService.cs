@@ -43,7 +43,7 @@ public class AutoSendBackgroundService(
 
         // Compare whole minutes so tick jitter around the boundary can't skip a send
         var minute   = new DateTime(now.Ticks - now.Ticks % TimeSpan.TicksPerMinute, now.Kind);
-        int interval = rule.IntervalMinutes ?? autoSend.Config.IntervalMinutes;
+        int interval = autoSend.IntervalFor(rule);
 
         if (!ruleChanged &&
             _lastSent.TryGetValue(rule.Name, out var last) &&

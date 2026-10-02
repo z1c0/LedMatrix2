@@ -2,7 +2,7 @@ using MatrixClient.Models;
 
 namespace MatrixClient.Services;
 
-public class AutoSendService(AutoSendConfig config, IWebHostEnvironment env, TimeProvider time)
+public class AutoSendService(AutoSendConfig config, GalleryService gallery, TimeProvider time)
 {
     private volatile bool _enabled = config.EnabledOnStartup;
 
@@ -14,24 +14,18 @@ public class AutoSendService(AutoSendConfig config, IWebHostEnvironment env, Tim
 
     public AutoSendRule? GetActiveRule() => GetActiveRule(time.GetLocalNow().DateTime);
 
-    public AutoSendRule? GetActiveRule(DateTime now)
-    {
-        var timeOfDay = now.TimeOfDay;
-        return config.Rules.FirstOrDefault(r =>
-            r.Days.Any(d => string.Equals(d, now.DayOfWeek.ToString(), StringComparison.OrdinalIgnoreCase)) &&
-            AutoSendRule.TryParseTime(r.From, out var from) && timeOfDay >= from &&
-            AutoSendRule.TryParseTime(r.To, out var to) && timeOfDay <= to);
-    }
+    // First rule (in file order) whose day matches and whose [from, to) window contains now
+    public AutoSendRule? GetActiveRule(DateTime now) =>
+        config.Rules.FirstOrDefault(r => r.IsActiveOn(now.DayOfWeek, now.TimeOfDay));
+
+    public int IntervalFor(AutoSendRule rule) => rule.IntervalMinutes ?? config.IntervalMinutes;
 
     public string? GetImagePath(string category)
     {
-        // Dynamic modes return themselves as the path; PixelSenderService handles them
-        if (AutoSendConfig.DynamicModes.Contains(category)) return category;
+        // Dynamic modes return themselves as the path; PixelSenderService renders them
+        if (DynamicImageService.IsDynamic(category)) return category;
 
-        var dir = Path.Combine(env.WebRootPath, "data", category);
-        if (!Directory.Exists(dir)) return null;
-        var files = Directory.GetFiles(dir, "*.*");
-        if (files.Length == 0) return null;
-        return $"{category}/{Path.GetFileName(files[Random.Shared.Next(files.Length)])}";
+        var images = gallery.GetImages(category);
+        return images.Length == 0 ? null : images[Random.Shared.Next(images.Length)];
     }
 }

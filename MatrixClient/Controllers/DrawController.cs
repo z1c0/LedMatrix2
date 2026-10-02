@@ -1,29 +1,31 @@
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using MatrixClient.Services;
 
 namespace MatrixClient.Controllers;
 
-public class DrawController(PixelSenderService sender, ILogger<DrawController> logger) : Controller
+public partial class DrawController(PixelSenderService sender, ILogger<DrawController> logger) : SendControllerBase(logger)
 {
     public IActionResult Index() => View();
 
     [HttpPost]
     [Route("Draw/Send")]
-    public async Task<IActionResult> Send(string pixels)
+    public Task<IActionResult> Send(string? pixels)
     {
-        try
+        if (pixels is null || !PixelPayload().IsMatch(pixels))
         {
-            const int expected = 32 * 32 * 6;
-            if (string.IsNullOrEmpty(pixels) || pixels.Length != expected)
-                throw new Exception($"Expected {expected} hex chars, got {pixels?.Length ?? 0}");
+            return Task.FromResult<IActionResult>(BadRequest(new
+            {
+                success = false,
+                error = $"Expected 6144 hex chars, got {pixels?.Length ?? 0} chars"
+                        + (pixels?.Length == 6144 ? " with non-hex characters" : "")
+            }));
+        }
 
-            await sender.SendRawAsync(pixels);
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Draw/Send");
-            return Json(new { success = false, error = e.Message });
-        }
-        return Json(new { success = true });
+        return SendAndReport(() => sender.SendRawAsync(pixels), "Draw/Send");
     }
+
+    // 32×32 pixels × RRGGBB
+    [GeneratedRegex("^[0-9A-Fa-f]{6144}$")]
+    private static partial Regex PixelPayload();
 }

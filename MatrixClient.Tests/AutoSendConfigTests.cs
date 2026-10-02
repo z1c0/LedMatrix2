@@ -22,6 +22,7 @@ public class AutoSendConfigTests : IDisposable
     [InlineData("07:05", 7, 5)]
     [InlineData("00:00", 0, 0)]
     [InlineData("23:59", 23, 59)]
+    [InlineData("24:00", 24, 0)]
     public void TryParseTime_AcceptsHoursAndMinutes(string value, int h, int m)
     {
         Assert.True(AutoSendRule.TryParseTime(value, out var time));
@@ -29,7 +30,8 @@ public class AutoSendConfigTests : IDisposable
     }
 
     [Theory]
-    [InlineData("24:00")]
+    [InlineData("24:01")]
+    [InlineData("25:00")]
     [InlineData("7:60")]
     [InlineData("7")]
     [InlineData("7:0x")]
@@ -72,12 +74,12 @@ public class AutoSendConfigTests : IDisposable
     {
         var rule = ValidRule();
         rule.From = "7:0x";
-        rule.To = "24:00";
+        rule.To = "24:30";
 
         var errors = Validate(rule);
 
         Assert.Contains(errors, e => e.Contains("invalid from time '7:0x'"));
-        Assert.Contains(errors, e => e.Contains("invalid to time '24:00'"));
+        Assert.Contains(errors, e => e.Contains("invalid to time '24:30'"));
     }
 
     [Fact]
@@ -87,7 +89,46 @@ public class AutoSendConfigTests : IDisposable
         rule.From = "22:00";
         rule.To = "02:00";
 
-        Assert.Contains(Validate(rule), e => e.Contains("wrap past midnight"));
+        Assert.Contains(Validate(rule), e => e.Contains("cross midnight"));
+    }
+
+    [Fact]
+    public void Validate_RejectsEmptyWindow()
+    {
+        var rule = ValidRule();
+        rule.From = rule.To = "12:00";
+
+        Assert.Contains(Validate(rule), e => e.Contains("must be before"));
+    }
+
+    [Fact]
+    public void Validate_AcceptsEndOfDay()
+    {
+        var rule = ValidRule();
+        rule.To = "24:00";
+
+        Assert.Empty(Validate(rule));
+    }
+
+    [Fact]
+    public void DescribeOverlaps_ReportsWinnerSharedDaysAndWindow()
+    {
+        var gaming = new AutoSendRule { Name = "Gaming", Days = ["Friday", "Saturday"], From = "20:00", To = "24:00", Category = "food" };
+        var weather = new AutoSendRule { Name = "Weather", Days = ["Monday", "Friday", "Saturday"], From = "09:00", To = "22:00", Category = "food" };
+
+        var overlaps = new AutoSendConfig { Rules = [gaming, weather] }.DescribeOverlaps();
+
+        Assert.Equal(["'Gaming' overrides 'Weather' on Friday, Saturday 20:00–22:00"], overlaps);
+    }
+
+    [Fact]
+    public void DescribeOverlaps_IgnoresAdjacentWindowsAndDisjointDays()
+    {
+        var morning = new AutoSendRule { Name = "Morning", Days = ["Friday"], From = "06:00", To = "07:00" };
+        var breakfast = new AutoSendRule { Name = "Breakfast", Days = ["Friday"], From = "07:00", To = "09:00" };
+        var weekend = new AutoSendRule { Name = "Weekend", Days = ["Sunday"], From = "06:00", To = "09:00" };
+
+        Assert.Empty(new AutoSendConfig { Rules = [morning, breakfast, weekend] }.DescribeOverlaps());
     }
 
     [Fact]

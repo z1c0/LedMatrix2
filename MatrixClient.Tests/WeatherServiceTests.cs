@@ -42,7 +42,7 @@ public class WeatherServiceTests
         try
         {
             var handler = FakeHttpHandler.Returning(HttpStatusCode.OK, ApiResponse);
-            var config = new WeatherConfig { Latitude = 48.5167, Longitude = 14.55, TemperatureUnit = "fahrenheit" };
+            var config = new WeatherConfig { Latitude = 48.5167, Longitude = 14.55, TemperatureUnit = TemperatureUnit.Fahrenheit };
 
             await Create(handler, config).GetCurrentAsync();
 
@@ -60,7 +60,7 @@ public class WeatherServiceTests
     [Fact]
     public async Task GetCurrentAsync_UsesFahrenheitLabel()
     {
-        var config = new WeatherConfig { TemperatureUnit = "fahrenheit" };
+        var config = new WeatherConfig { TemperatureUnit = TemperatureUnit.Fahrenheit };
         var service = Create(FakeHttpHandler.Returning(HttpStatusCode.OK, ApiResponse), config);
 
         Assert.Equal("°F", (await service.GetCurrentAsync())?.Unit);

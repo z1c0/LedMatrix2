@@ -14,18 +14,8 @@ public class PixelSenderServiceTests : IDisposable
 
     public void Dispose() => _webRoot.Dispose();
 
-    private PixelSenderService CreateSender(FakeHttpHandler pico, PicoConfig? config = null)
-    {
-        // The weather service is only needed for the "weather" dynamic mode; its API always fails here
-        var weatherHttp = new FakeHttpClientFactory(FakeHttpHandler.Returning(HttpStatusCode.InternalServerError));
-        var weather = new WeatherService(new WeatherConfig(), weatherHttp, TimeProvider.System, NullLogger<WeatherService>.Instance);
-        return new PixelSenderService(
-            config ?? new PicoConfig(),
-            new FakeHttpClientFactory(pico),
-            new FakeWebHostEnvironment(_webRoot.Path),
-            weather,
-            TimeProvider.System, NullLogger<PixelSenderService>.Instance);
-    }
+    private PixelSenderService CreateSender(FakeHttpHandler pico, PicoConfig? config = null) =>
+        TestServices.Sender(pico, _webRoot.Path, config: config);
 
     private void SaveImage(string relativePath, int size, Rgba32 fill)
     {
@@ -94,7 +84,7 @@ public class PixelSenderServiceTests : IDisposable
         SaveImage("food/big.png", 64, new Rgba32(255, 0, 0));
         var pico = FakeHttpHandler.Returning(HttpStatusCode.OK);
 
-        var ex = await Assert.ThrowsAsync<Exception>(() => CreateSender(pico).SendAsync("food/big.png"));
+        var ex = await Assert.ThrowsAsync<InvalidDataException>(() => CreateSender(pico).SendAsync("food/big.png"));
 
         Assert.Contains("64x64", ex.Message);
         Assert.Empty(pico.Requests);
@@ -138,7 +128,7 @@ public class PixelSenderServiceTests : IDisposable
     {
         var pico = FakeHttpHandler.Returning(HttpStatusCode.BadRequest, "bad length");
 
-        var ex = await Assert.ThrowsAsync<Exception>(() => CreateSender(pico).SendRawAsync("00"));
+        var ex = await Assert.ThrowsAsync<PicoException>(() => CreateSender(pico).SendRawAsync("00"));
 
         Assert.Contains("400", ex.Message);
         Assert.Contains("bad length", ex.Message);
@@ -211,7 +201,7 @@ public class PixelSenderServiceTests : IDisposable
         });
         var sender = CreateSender(pico, new PicoConfig { TimeoutSeconds = 0.1 });
 
-        var ex = await Assert.ThrowsAsync<TimeoutException>(() => sender.SendRawAsync("00"));
+        var ex = await Assert.ThrowsAsync<PicoException>(() => sender.SendRawAsync("00"));
 
         Assert.Contains("did not respond", ex.Message);
     }
@@ -228,7 +218,7 @@ public class PixelSenderServiceTests : IDisposable
         });
         var sender = CreateSender(pico, new PicoConfig { TimeoutSeconds = 0.1 });
 
-        await Assert.ThrowsAsync<TimeoutException>(() => sender.SendRawAsync("00"));
+        await Assert.ThrowsAsync<PicoException>(() => sender.SendRawAsync("00"));
         await sender.SendRawAsync("00");
 
         Assert.Equal(2, calls);

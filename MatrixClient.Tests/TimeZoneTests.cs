@@ -44,10 +44,9 @@ public class TimeZoneTests : IDisposable
     {
         var rule = new AutoSendRule { Name = "Morning", Days = ["Friday"], From = "10:00", To = "11:00", Category = "clock" };
         var config = new AutoSendConfig { Rules = [rule] };
-        var env = new FakeWebHostEnvironment(_webRoot.Path);
 
-        var inVienna = new AutoSendService(config, env, new FakeTimeProvider(SummerUtc) { Zone = Vienna });
-        var inUtc    = new AutoSendService(config, env, new FakeTimeProvider(SummerUtc));
+        var inVienna = TestServices.AutoSend(config, _webRoot.Path, new FakeTimeProvider(SummerUtc) { Zone = Vienna });
+        var inUtc    = TestServices.AutoSend(config, _webRoot.Path, new FakeTimeProvider(SummerUtc));
 
         Assert.Equal("Morning", inVienna.GetActiveRule()?.Name);
         Assert.Null(inUtc.GetActiveRule());
@@ -58,10 +57,7 @@ public class TimeZoneTests : IDisposable
     {
         var pico = FakeHttpHandler.Returning(HttpStatusCode.OK);
         var time = new FakeTimeProvider(SummerUtc) { Zone = Vienna };
-        var weather = new WeatherService(new WeatherConfig(), new FakeHttpClientFactory(pico), time,
-            NullLogger<WeatherService>.Instance);
-        var sender = new PixelSenderService(new PicoConfig(), new FakeHttpClientFactory(pico),
-            new FakeWebHostEnvironment(_webRoot.Path), weather, time, NullLogger<PixelSenderService>.Instance);
+        var sender = TestServices.Sender(pico, _webRoot.Path, time);
 
         await sender.SendAsync("clock");
 
@@ -72,9 +68,7 @@ public class TimeZoneTests : IDisposable
     [Fact]
     public void AutoSendService_StartsWithConfiguredState()
     {
-        var env = new FakeWebHostEnvironment(_webRoot.Path);
-
-        Assert.True(new AutoSendService(new AutoSendConfig { EnabledOnStartup = true }, env, TimeProvider.System).IsEnabled);
-        Assert.False(new AutoSendService(new AutoSendConfig(), env, TimeProvider.System).IsEnabled);
+        Assert.True(TestServices.AutoSend(new AutoSendConfig { EnabledOnStartup = true }, _webRoot.Path).IsEnabled);
+        Assert.False(TestServices.AutoSend(new AutoSendConfig(), _webRoot.Path).IsEnabled);
     }
 }

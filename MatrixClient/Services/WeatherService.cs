@@ -27,7 +27,7 @@ public class WeatherService(WeatherConfig config, IHttpClientFactory httpClientF
             {
                 var lat  = config.Latitude.ToString(CultureInfo.InvariantCulture);
                 var lon  = config.Longitude.ToString(CultureInfo.InvariantCulture);
-                var unit = config.TemperatureUnit;
+                var unit = config.TemperatureUnit.ToString().ToLowerInvariant();
                 var url  = $"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}" +
                            $"&current=temperature_2m,weather_code&temperature_unit={unit}";
 
@@ -38,7 +38,7 @@ public class WeatherService(WeatherConfig config, IHttpClientFactory httpClientF
 
                 var temp = curr.GetProperty("temperature_2m").GetDouble();
                 var code = curr.GetProperty("weather_code").GetInt32();
-                var unitLabel = unit == "fahrenheit" ? "°F" : "°C";
+                var unitLabel = config.TemperatureUnit == TemperatureUnit.Fahrenheit ? "°F" : "°C";
 
                 _cached    = new WeatherData(temp, code, unitLabel);
                 _fetchedAt = now;

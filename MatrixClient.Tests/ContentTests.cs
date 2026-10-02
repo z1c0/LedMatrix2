@@ -47,23 +47,6 @@ public class ContentTests
         Assert.Empty(LoadRules().Validate(DataDir));
 
     [Fact]
-    public void Rules_HaveValidDaysAndTimes()
-    {
-        foreach (var rule in LoadRules().Rules)
-        {
-            Assert.False(string.IsNullOrWhiteSpace(rule.Name));
-            Assert.NotEmpty(rule.Days);
-            Assert.All(rule.Days, d => Assert.True(Enum.TryParse<DayOfWeek>(d, ignoreCase: true, out _), $"{rule.Name}: bad day '{d}'"));
-
-            // AutoSendService parses these every minute; a bad value would crash the background service
-            Assert.True(TimeSpan.TryParse(rule.From, out var from), $"{rule.Name}: bad from '{rule.From}'");
-            Assert.True(TimeSpan.TryParse(rule.To, out var to), $"{rule.Name}: bad to '{rule.To}'");
-            Assert.True(from <= to, $"{rule.Name}: from {rule.From} is after to {rule.To}");
-            Assert.True(rule.IntervalMinutes is null or > 0, $"{rule.Name}: interval must be positive");
-        }
-    }
-
-    [Fact]
     public void Rules_ReferenceExistingCategories()
     {
         foreach (var rule in LoadRules().Rules)

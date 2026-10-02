@@ -1,34 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using MatrixClient.Services;
 
 namespace MatrixClient.Controllers;
 
-public class DynamicController(WeatherService weatherService, TimeProvider time) : Controller
+public class DynamicController(DynamicImageService dynamicImages) : Controller
 {
-    private static readonly HashSet<string> KnownModes = ["clock", "calendar", "weather"];
-
+    // Content changes every minute, so the gallery thumbnails must never come from the browser cache
     [HttpGet]
     [Route("Dynamic/Preview/{mode}")]
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
     public async Task<IActionResult> Preview(string mode)
     {
-        Image<Rgba32>? img = mode switch
-        {
-            "clock"    => ClockRenderer.Render(time.GetLocalNow().DateTime),
-            "calendar" => CalendarRenderer.Render(time.GetLocalNow().DateTime),
-            "weather"  => await WeatherRenderer.RenderAsync(weatherService),
-            _          => null
-        };
-        if (img is null) return NotFound();
+        if (!DynamicImageService.IsDynamic(mode)) return NotFound();
 
-        using (img)
-        {
-            var ms = new MemoryStream();
-            img.SaveAsPng(ms);
-            return File(ms.ToArray(), "image/png");
-        }
+        using var img = await dynamicImages.RenderAsync(mode);
+        using var ms  = new MemoryStream();
+        await img.SaveAsPngAsync(ms);
+        return File(ms.ToArray(), "image/png");
     }
-
-    public static bool IsDynamic(string path) => KnownModes.Contains(path);
 }

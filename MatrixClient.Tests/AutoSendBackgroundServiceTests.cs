@@ -18,12 +18,8 @@ public class AutoSendBackgroundServiceTests : IDisposable
 
     private (AutoSendBackgroundService Service, AutoSendService AutoSend) Create(params AutoSendRule[] rules)
     {
-        var env = new FakeWebHostEnvironment(_webRoot.Path);
-        var autoSend = new AutoSendService(new AutoSendConfig { IntervalMinutes = 10, Rules = [.. rules] }, env, TimeProvider.System);
-        var weather = new WeatherService(new WeatherConfig(), new FakeHttpClientFactory(_pico), TimeProvider.System,
-            NullLogger<WeatherService>.Instance);
-        var sender = new PixelSenderService(new PicoConfig(), new FakeHttpClientFactory(_pico), env, weather,
-            TimeProvider.System, NullLogger<PixelSenderService>.Instance);
+        var autoSend = TestServices.AutoSend(new AutoSendConfig { IntervalMinutes = 10, Rules = [.. rules] }, _webRoot.Path);
+        var sender = TestServices.Sender(_pico, _webRoot.Path);
         autoSend.Enable();
         return (new AutoSendBackgroundService(autoSend, sender, TimeProvider.System, NullLogger<AutoSendBackgroundService>.Instance), autoSend);
     }
@@ -41,7 +37,7 @@ public class AutoSendBackgroundServiceTests : IDisposable
     [Fact]
     public async Task Tick_DoesNothingWhenDisabled()
     {
-        var (service, autoSend) = Create(ClockRule("Clock", "00:00", "23:59", interval: 1));
+        var (service, autoSend) = Create(ClockRule("Clock", "00:00", "24:00", interval: 1));
         autoSend.Disable();
 
         await service.TickAsync(TenAm);
@@ -52,7 +48,7 @@ public class AutoSendBackgroundServiceTests : IDisposable
     [Fact]
     public async Task Tick_OneMinuteIntervalSurvivesTimerJitter()
     {
-        var (service, _) = Create(ClockRule("Clock", "00:00", "23:59", interval: 1));
+        var (service, _) = Create(ClockRule("Clock", "00:00", "24:00", interval: 1));
 
         // Second tick fires a little "earlier" past its boundary than the first one did
         await service.TickAsync(TenAm.AddMilliseconds(250));
@@ -65,7 +61,7 @@ public class AutoSendBackgroundServiceTests : IDisposable
     [Fact]
     public async Task Tick_RespectsRuleInterval()
     {
-        var (service, _) = Create(ClockRule("Clock", "00:00", "23:59"));   // falls back to global 10 min
+        var (service, _) = Create(ClockRule("Clock", "00:00", "24:00"));   // falls back to global 10 min
 
         for (var m = 0; m <= 10; m++)
             await service.TickAsync(TenAm.AddMinutes(m));
@@ -77,7 +73,7 @@ public class AutoSendBackgroundServiceTests : IDisposable
     public async Task Tick_SendsImmediatelyWhenRuleChanges()
     {
         var (service, _) = Create(
-            ClockRule("Morning", "10:00", "10:02"),
+            ClockRule("Morning", "10:00", "10:03"),
             ClockRule("Midday",  "10:03", "12:00"));
 
         for (var m = 0; m <= 3; m++)
@@ -89,7 +85,7 @@ public class AutoSendBackgroundServiceTests : IDisposable
     [Fact]
     public async Task Tick_SendsImmediatelyWhenReEnabled()
     {
-        var (service, autoSend) = Create(ClockRule("Clock", "00:00", "23:59"));
+        var (service, autoSend) = Create(ClockRule("Clock", "00:00", "24:00"));
 
         await service.TickAsync(TenAm);
         autoSend.Disable();
@@ -106,12 +102,9 @@ public class AutoSendBackgroundServiceTests : IDisposable
         var calls = 0;
         var pico = new FakeHttpHandler(_ => new HttpResponseMessage(
             Interlocked.Increment(ref calls) == 1 ? HttpStatusCode.InternalServerError : HttpStatusCode.OK));
-        var env = new FakeWebHostEnvironment(_webRoot.Path);
-        var autoSend = new AutoSendService(new AutoSendConfig { IntervalMinutes = 10, Rules = [ClockRule("Clock", "00:00", "23:59")] }, env, TimeProvider.System);
-        var weather = new WeatherService(new WeatherConfig(), new FakeHttpClientFactory(pico), TimeProvider.System,
-            NullLogger<WeatherService>.Instance);
-        var sender = new PixelSenderService(new PicoConfig(), new FakeHttpClientFactory(pico), env, weather,
-            TimeProvider.System, NullLogger<PixelSenderService>.Instance);
+        var autoSend = TestServices.AutoSend(
+            new AutoSendConfig { IntervalMinutes = 10, Rules = [ClockRule("Clock", "00:00", "24:00")] }, _webRoot.Path);
+        var sender = TestServices.Sender(pico, _webRoot.Path);
         autoSend.Enable();
         var service = new AutoSendBackgroundService(autoSend, sender, TimeProvider.System, NullLogger<AutoSendBackgroundService>.Instance);
 

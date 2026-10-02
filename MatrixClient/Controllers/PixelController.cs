@@ -3,21 +3,10 @@ using MatrixClient.Services;
 
 namespace MatrixClient.Controllers;
 
-public class PixelController(PixelSenderService sender, ILogger<PixelController> logger) : Controller
+public class PixelController(PixelSenderService sender, ILogger<PixelController> logger) : SendControllerBase(logger)
 {
     [HttpPost]
     [Route("Pixels/SendToMatrix")]
-    public async Task<IActionResult> SendToMatrix(string fileName)
-    {
-        try
-        {
-            await sender.SendAsync(fileName);
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "SendToMatrix");
-            return Json(new { success = false, error = e.Message });
-        }
-        return Json(new { success = true });
-    }
+    public Task<IActionResult> SendToMatrix(string fileName) =>
+        SendAndReport(() => sender.SendAsync(fileName), "SendToMatrix");
 }

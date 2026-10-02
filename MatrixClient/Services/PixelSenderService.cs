@@ -5,16 +5,19 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace MatrixClient.Services;
 
-public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFactory, IWebHostEnvironment env, WeatherService weatherService, TimeProvider time, ILogger<PixelSenderService> logger)
+public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFactory, GalleryService gallery, DynamicImageService dynamicImages, ILogger<PixelSenderService> logger)
 {
     // The Pico's HTTP server handles one request at a time, so manual, draw and auto sends take turns
     private readonly SemaphoreSlim _sendLock = new(1, 1);
 
-    public async Task SendAsync(string relativePath)
+    // Sends a gallery path ("food/apple.png") or a dynamic mode ("clock")
+    public async Task SendAsync(string path)
     {
-        using var image = await ResolveImageAsync(relativePath);
+        using var image = DynamicImageService.IsDynamic(path)
+            ? await dynamicImages.RenderAsync(path)
+            : await Image.LoadAsync<Rgba32>(gallery.ResolvePath(path));
         if (image.Width != 32 || image.Height != 32)
-            throw new Exception($"Unexpected image dimensions: {image.Width}x{image.Height}");
+            throw new InvalidDataException($"Image must be 32x32, got {image.Width}x{image.Height}");
 
         await SendRawAsync(ToHex(image));
     }
@@ -52,9 +55,13 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
             {
                 response = await httpClientFactory.CreateClient().PostAsync(pico.Url, content, cts.Token);
             }
-            catch (OperationCanceledException) when (cts.IsCancellationRequested)
+            catch (OperationCanceledException ex) when (cts.IsCancellationRequested)
             {
-                throw new TimeoutException($"Pico at {pico.Url} did not respond within {pico.TimeoutSeconds} s");
+                throw new PicoException($"Matrix did not respond within {pico.TimeoutSeconds} s", ex);
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new PicoException($"Matrix is unreachable ({ex.Message})", ex);
             }
 
             using (response)
@@ -63,7 +70,7 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
                 {
                     var error = await response.Content.ReadAsStringAsync();
                     logger.LogWarning("Pico returned {StatusCode}: {Error}", (int)response.StatusCode, error);
-                    throw new Exception($"Pico returned {(int)response.StatusCode}: {error}");
+                    throw new PicoException($"Matrix returned {(int)response.StatusCode}: {error}");
                 }
             }
         }
@@ -71,27 +78,5 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
         {
             _sendLock.Release();
         }
-    }
-
-    private Task<Image<Rgba32>> ResolveImageAsync(string path) => path switch
-    {
-        "clock"    => Task.FromResult(ClockRenderer.Render(time.GetLocalNow().DateTime)),
-        "calendar" => Task.FromResult(CalendarRenderer.Render(time.GetLocalNow().DateTime)),
-        "weather"  => WeatherRenderer.RenderAsync(weatherService),
-        _          => Task.FromResult(Image.Load<Rgba32>(ResolveDataPath(path)))
-    };
-
-    // Maps a gallery path like "food/apple.png" to disk, refusing anything outside wwwroot/data
-    private string ResolveDataPath(string relativePath)
-    {
-        var dataRoot = Path.GetFullPath(Path.Combine(env.WebRootPath, "data")) + Path.DirectorySeparatorChar;
-        var fullPath = Path.GetFullPath(Path.Combine(dataRoot, relativePath));
-
-        if (!fullPath.StartsWith(dataRoot, StringComparison.Ordinal))
-            throw new ArgumentException($"Invalid image path: {relativePath}");
-        if (!File.Exists(fullPath))
-            throw new FileNotFoundException($"Image not found: {relativePath}");
-
-        return fullPath;
     }
 }

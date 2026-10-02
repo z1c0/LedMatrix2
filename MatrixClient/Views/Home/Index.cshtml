@@ -1,4 +1,4 @@
-@model Dictionary<string, string[]>
+@model IDictionary<string, string[]>
 
 @{
 	ViewData["Title"] = "Pixel Matrix";
@@ -12,12 +12,11 @@
 	<div class="px-gallery">
 		<div class="px-category">dynamic</div>
 		<div class="px-grid">
-			<img src="@Url.Action("Preview", "Dynamic", new { mode = "clock" })"
-				 alt="clock" class="px-thumb" data-path="clock" onclick="selectImage(this)" />
-			<img src="@Url.Action("Preview", "Dynamic", new { mode = "calendar" })"
-				 alt="calendar" class="px-thumb" data-path="calendar" onclick="selectImage(this)" />
-			<img src="@Url.Action("Preview", "Dynamic", new { mode = "weather" })"
-				 alt="weather" class="px-thumb" data-path="weather" onclick="selectImage(this)" />
+			@foreach (var mode in MatrixClient.Services.DynamicImageService.Modes)
+			{
+				<img src="@Url.Action("Preview", "Dynamic", new { mode })"
+					 alt="@mode" class="px-thumb" data-path="@mode" onclick="selectImage(this)" />
+			}
 		</div>
 
 		@foreach (var group in Model)
@@ -93,7 +92,7 @@
 				},
 				error: function (xhr) {
 					btn.prop('disabled', false).text('Send Pixels');
-					showError(xhr.responseText || 'Request failed');
+					showError((xhr.responseJSON && xhr.responseJSON.error) || 'Request failed');
 				}
 			});
 		});
