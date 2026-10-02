@@ -44,6 +44,13 @@ public sealed class FakeTimeProvider(DateTimeOffset start) : TimeProvider
     public void Advance(TimeSpan by) => Now += by;
 }
 
+public sealed class FakePicoProbe : MatrixClient.Services.IPicoProbe
+{
+    public bool Reachable { get; set; } = true;
+
+    public Task<bool> IsReachableAsync(CancellationToken ct) => Task.FromResult(Reachable);
+}
+
 public sealed class FakeHttpClientFactory(HttpMessageHandler handler) : IHttpClientFactory
 {
     public HttpClient CreateClient(string name) => new(handler, disposeHandler: false);

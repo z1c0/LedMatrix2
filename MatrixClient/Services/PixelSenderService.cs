@@ -5,7 +5,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace MatrixClient.Services;
 
-public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFactory, GalleryService gallery, DynamicImageService dynamicImages, ILogger<PixelSenderService> logger)
+public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFactory, GalleryService gallery, DynamicImageService dynamicImages, PicoStatus status, ILogger<PixelSenderService> logger)
 {
     // The Pico's HTTP server handles one request at a time, so manual, draw and auto sends take turns
     private readonly SemaphoreSlim _sendLock = new(1, 1);
@@ -19,7 +19,7 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
         if (image.Width != 32 || image.Height != 32)
             throw new InvalidDataException($"Image must be 32x32, got {image.Width}x{image.Height}");
 
-        await SendRawAsync(ToHex(image));
+        await SendCoreAsync(new PicoStatus.SentContent(path, ToHex(image)));
     }
 
     // One RRGGBB hex triple per pixel, row-major; near-transparent pixels become black
@@ -42,12 +42,14 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
         return sb.ToString();
     }
 
-    public async Task SendRawAsync(string hexPayload)
+    public Task SendRawAsync(string hexPayload) => SendCoreAsync(new PicoStatus.SentContent(null, hexPayload));
+
+    private async Task SendCoreAsync(PicoStatus.SentContent sent)
     {
         await _sendLock.WaitAsync();
         try
         {
-            using var content = new StringContent(hexPayload, Encoding.UTF8, "application/text");
+            using var content = new StringContent(sent.Hex, Encoding.UTF8, "application/text");
             using var cts     = new CancellationTokenSource(TimeSpan.FromSeconds(pico.TimeoutSeconds));
 
             HttpResponseMessage response;
@@ -57,10 +59,12 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
             }
             catch (OperationCanceledException ex) when (cts.IsCancellationRequested)
             {
+                status.ReportUnreachable();
                 throw new PicoException($"Matrix did not respond within {pico.TimeoutSeconds} s", ex);
             }
             catch (HttpRequestException ex)
             {
+                status.ReportUnreachable();
                 throw new PicoException($"Matrix is unreachable ({ex.Message})", ex);
             }
 
@@ -73,6 +77,7 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
                     throw new PicoException($"Matrix returned {(int)response.StatusCode}: {error}");
                 }
             }
+            status.ReportSent(sent);
         }
         finally
         {

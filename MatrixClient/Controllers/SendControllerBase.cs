@@ -26,7 +26,8 @@ public abstract class SendControllerBase(ILogger logger) : Controller
                 _                     => (StatusCodes.Status500InternalServerError, "Unexpected error, see server log"),
             };
 
-            if (status >= 500)
+            // A powered-off matrix (502) is routine; only truly unexpected failures are errors
+            if (status == StatusCodes.Status500InternalServerError)
                 logger.LogError(ex, "{Operation} failed", operation);
             else
                 logger.LogWarning("{Operation} rejected: {Message}", operation, ex.Message);
