@@ -12,9 +12,10 @@ public class AutoSendService(AutoSendConfig config, IWebHostEnvironment env)
     public void Enable()  => _enabled = true;
     public void Disable() => _enabled = false;
 
-    public AutoSendRule? GetActiveRule()
+    public AutoSendRule? GetActiveRule() => GetActiveRule(DateTime.Now);
+
+    public AutoSendRule? GetActiveRule(DateTime now)
     {
-        var now = DateTime.Now;
         var time = now.TimeOfDay;
         return config.Rules.FirstOrDefault(r =>
             r.Days.Any(d => string.Equals(d, now.DayOfWeek.ToString(), StringComparison.OrdinalIgnoreCase)) &&

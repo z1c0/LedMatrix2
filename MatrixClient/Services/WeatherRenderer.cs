@@ -21,9 +21,11 @@ public static class WeatherRenderer
     private static readonly Rgba32 ColFog     = new(160, 165, 170);
     private static readonly Rgba32 ColUnit    = new(100, 100, 100);
 
-    public static async Task<Image<Rgba32>> RenderAsync(WeatherService weather)
+    public static async Task<Image<Rgba32>> RenderAsync(WeatherService weather) =>
+        Render(await weather.GetCurrentAsync());
+
+    public static Image<Rgba32> Render(WeatherService.WeatherData data)
     {
-        var data = await weather.GetCurrentAsync();
         var img  = new Image<Rgba32>(32, 32, new Rgba32(0, 0, 16));
 
         // Icon — centered horizontally, top area (y=1)

@@ -1,9 +1,18 @@
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+
 namespace MatrixClient.Models;
 
 public class AutoSendConfig
 {
     public int IntervalMinutes { get; set; } = 5;
     public List<AutoSendRule> Rules { get; set; } = [];
+
+    public static AutoSendConfig FromYaml(string yaml) =>
+        new DeserializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .Build()
+            .Deserialize<AutoSendConfig>(yaml);
 }
 
 public class AutoSendRule

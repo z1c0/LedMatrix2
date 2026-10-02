@@ -14,9 +14,10 @@ public static class CalendarRenderer
     private static readonly string[] MonthNames = ["JAN","FEB","MAR","APR","MAY","JUN",
                                                     "JUL","AUG","SEP","OCT","NOV","DEC"];
 
-    public static Image<Rgba32> Render()
+    public static Image<Rgba32> Render() => Render(DateTime.Now);
+
+    public static Image<Rgba32> Render(DateTime now)
     {
-        var now      = DateTime.Now;
         var dayAbbr  = DayNames[(int)now.DayOfWeek];
         var dayNum   = now.Day.ToString();
         var monthAbbr = MonthNames[now.Month - 1];

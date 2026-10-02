@@ -27,6 +27,9 @@ dotnet run
 # Build release
 dotnet build -c Release
 
+# Run tests (xUnit project lives outside the Docker build context, in ../MatrixClient.Tests)
+dotnet test MatrixClient.sln
+
 # Docker
 docker build -f Dockerfile -t matrixclient .
 docker run -p 8080:8080 matrixclient

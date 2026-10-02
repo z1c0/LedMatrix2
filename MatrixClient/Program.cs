@@ -1,7 +1,5 @@
 using MatrixClient.Models;
 using MatrixClient.Services;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,10 +9,7 @@ builder.Services.AddHttpClient();
 
 var rulesPath = Path.Combine(builder.Environment.ContentRootPath, "rules.yaml");
 var autoSendConfig = File.Exists(rulesPath)
-    ? new DeserializerBuilder()
-        .WithNamingConvention(UnderscoredNamingConvention.Instance)
-        .Build()
-        .Deserialize<AutoSendConfig>(File.ReadAllText(rulesPath))
+    ? AutoSendConfig.FromYaml(File.ReadAllText(rulesPath))
     : new AutoSendConfig();
 
 builder.Services.AddSingleton(autoSendConfig);

@@ -9,9 +9,10 @@ public static class ClockRenderer
     private static readonly Rgba32 DigitColor = new(0,  160,  255);
     private static readonly Rgba32 ColonColor = new(0,   90,  160);
 
-    public static Image<Rgba32> Render()
+    public static Image<Rgba32> Render() => Render(DateTime.Now);
+
+    public static Image<Rgba32> Render(DateTime now)
     {
-        var now  = DateTime.Now;
         var hh   = now.ToString("HH");
         var mm   = now.ToString("mm");
         var text = hh + ":" + mm;

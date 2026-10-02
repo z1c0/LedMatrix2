@@ -14,9 +14,15 @@ public class PixelSenderService(IHttpClientFactory httpClientFactory, IWebHostEn
         if (image.Width != 32 || image.Height != 32)
             throw new Exception($"Unexpected image dimensions: {image.Width}x{image.Height}");
 
-        var sb = new StringBuilder(32 * 32 * 6);
-        for (var y = 0; y < 32; y++)
-            for (var x = 0; x < 32; x++)
+        await SendRawAsync(ToHex(image));
+    }
+
+    // One RRGGBB hex triple per pixel, row-major; near-transparent pixels become black
+    public static string ToHex(Image<Rgba32> image)
+    {
+        var sb = new StringBuilder(image.Width * image.Height * 6);
+        for (var y = 0; y < image.Height; y++)
+            for (var x = 0; x < image.Width; x++)
             {
                 var p = image[x, y];
                 if (p.A < 50)
@@ -28,15 +34,7 @@ public class PixelSenderService(IHttpClientFactory httpClientFactory, IWebHostEn
                     sb.Append(p.B.ToString("X2"));
                 }
             }
-
-        var content  = new StringContent(sb.ToString(), Encoding.UTF8, "application/text");
-        var response = await httpClientFactory.CreateClient().PostAsync(PicoUrl, content);
-        if (!response.IsSuccessStatusCode)
-        {
-            var error = await response.Content.ReadAsStringAsync();
-            logger.LogWarning("Pico returned {StatusCode}: {Error}", (int)response.StatusCode, error);
-            throw new Exception($"Pico returned {(int)response.StatusCode}: {error}");
-        }
+        return sb.ToString();
     }
 
     public async Task SendRawAsync(string hexPayload)
