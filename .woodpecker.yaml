@@ -1,4 +1,24 @@
 steps:
+  # Runs first so a failing test (or a broken rules.yaml) stops the build and deploy
+  - name: test
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    when:
+      - event: push
+        branch: main
+    commands:
+      - dotnet test MatrixClient/MatrixClient.sln
+    backend_options:
+      kubernetes:
+        nodeSelector:
+          kubernetes.io/arch: arm64
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 500m
+          limits:
+            memory: 1Gi
+            cpu: 1000m
+
   - name: build-and-push
     image: woodpeckerci/plugin-kaniko
     when:
