@@ -50,10 +50,11 @@ public class ContentTests
     public void Rules_ReferenceExistingCategories()
     {
         foreach (var rule in LoadRules().Rules)
-        {
-            var exists = DynamicModes.Contains(rule.Category) ||
-                         Directory.EnumerateFiles(Path.Combine(DataDir, rule.Category)).Any();
-            Assert.True(exists, $"{rule.Name}: category '{rule.Category}' has no images");
-        }
+            foreach (var category in rule.AllCategories)
+            {
+                var exists = DynamicModes.Contains(category) ||
+                             Directory.EnumerateFiles(Path.Combine(DataDir, category)).Any();
+                Assert.True(exists, $"{rule.Name}: category '{category}' has no images");
+            }
     }
 }

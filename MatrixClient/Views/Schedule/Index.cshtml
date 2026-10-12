@@ -1,11 +1,13 @@
 @model MatrixClient.Models.AutoSendConfig
+@inject TimeProvider Time
 @{
     ViewData["Title"] = "Schedule";
 
     var days     = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
     var dayShort = new[] { "Mon",    "Tue",     "Wed",       "Thu",      "Fri",    "Sat",      "Sun" };
 
-    var ruleColors = new[] { "#4a9eff", "#6dbf6d", "#f4a261", "#e07070", "#a78bfa", "#34d399" };
+    var ruleColors = new[] { "#4a9eff", "#6dbf6d", "#f4a261", "#e07070", "#a78bfa", "#34d399", "#e9c46a", "#f472b6", "#60a5fa", "#94a3b8" };
+    var today = Time.GetLocalNow().DateTime;
 
     double ToMinutes(string t)
     {
@@ -33,11 +35,15 @@ else
         {
             var rule = Model.Rules[i];
             var color = ruleColors[i % ruleColors.Length];
-            <div class="sched-legend-item">
+            <div class="sched-legend-item @(rule.IsInSeason(today) ? "" : "off-season")">
                 <span class="sched-legend-dot" style="background:@color"></span>
                 <strong>@rule.Name</strong>
-                <span class="sched-legend-cat">@rule.Category</span>
+                <span class="sched-legend-cat">@string.Join(" · ", rule.AllCategories)</span>
                 <span class="sched-legend-time">@rule.From – @rule.To</span>
+                @if (rule.Season is { } season)
+                {
+                    <span class="sched-legend-season">@season</span>
+                }
                 @if (rule.IntervalMinutes.HasValue)
                 {
                     <span class="sched-legend-interval">every @rule.IntervalMinutes min</span>
@@ -81,13 +87,16 @@ else
                         var color = ruleColors[i % ruleColors.Length];
                         if (rule.Days.Any(rd => string.Equals(rd, dayName, StringComparison.OrdinalIgnoreCase)))
                         {
-                            var top    = Pct(ToMinutes(rule.From));
-                            var height = Pct(ToMinutes(rule.To) - ToMinutes(rule.From));
-                            <div class="sched-rule-block"
-                                 style="top:@top;height:@height;background:@color;z-index:@(Model.Rules.Count - i)"
-                                 title="@rule.Name (@rule.From – @rule.To)">
+                            // Out-of-season rules sit faded behind the ones that actually run today
+                            var inSeason = rule.IsInSeason(today);
+                            var top      = Pct(ToMinutes(rule.From));
+                            var height   = Pct(ToMinutes(rule.To) - ToMinutes(rule.From));
+                            var zIndex   = inSeason ? Model.Rules.Count - i + 1 : 0;
+                            <div class="sched-rule-block @(inSeason ? "" : "off-season")"
+                                 style="top:@top;height:@height;background:@color;z-index:@zIndex"
+                                 title="@rule.Name (@rule.From – @rule.To@(rule.Season is null ? "" : ", " + rule.Season))">
                                 <div class="sched-rule-name">@rule.Name</div>
-                                <div class="sched-rule-cat">@rule.Category</div>
+                                <div class="sched-rule-cat">@string.Join(" · ", rule.AllCategories)</div>
                             </div>
                         }
                     }

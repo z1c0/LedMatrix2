@@ -269,6 +269,15 @@ body {
   font-size: 0.7rem;
 }
 
+.sched-legend-season {
+  color: #e9c46a;
+  font-size: 0.68rem;
+}
+
+.sched-legend-item.off-season {
+  opacity: 0.45;
+}
+
 .sched-legend-interval {
   color: #4a9eff;
   font-size: 0.68rem;
@@ -441,6 +450,10 @@ body {
   overflow: hidden;
   z-index: 1;
   opacity: 0.88;
+}
+
+.sched-rule-block.off-season {
+  opacity: 0.25;
 }
 
 .sched-rule-name {

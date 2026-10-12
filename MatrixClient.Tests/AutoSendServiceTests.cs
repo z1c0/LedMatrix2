@@ -96,7 +96,39 @@ public class AutoSendServiceTests : IDisposable
         Assert.Equal("Every day", service.GetActiveRule(Friday.AddHours(10))?.Name);
     }
 
+    [Fact]
+    public void GetActiveRule_SkipsRulesOutOfSeason()
+    {
+        var halloween = Rule("Halloween", "17:00", "22:00", "Friday");
+        (halloween.FromDate, halloween.ToDate) = ("10-01", "10-31");
+        var service = Create(halloween, Rule("Evening", "17:00", "22:00", "Friday"));
+
+        Assert.Equal("Halloween", service.GetActiveRule(Friday.AddHours(18))?.Name);              // Oct 2
+        Assert.Equal("Evening", service.GetActiveRule(new DateTime(2026, 7, 3).AddHours(18))?.Name); // a Friday in July
+    }
+
     // ── GetImagePath ─────────────────────────────────────────────────────────
+
+    [Fact]
+    public void GetImagePath_ForRule_PicksFromAllItsCategories()
+    {
+        var dir = Directory.CreateDirectory(Path.Combine(_webRoot.Path, "data", "food")).FullName;
+        File.WriteAllBytes(Path.Combine(dir, "apple.png"), []);
+        var rule = new AutoSendRule { Name = "Mix", Categories = ["food", "clock"] };
+
+        var picked = Enumerable.Range(0, 50).Select(_ => Create().GetImagePath(rule)).ToHashSet();
+
+        Assert.Equal(new HashSet<string?> { "clock", "food/apple.png" }, picked);
+    }
+
+    [Fact]
+    public void GetImagePath_ForRule_SkipsEmptyCategories()
+    {
+        Directory.CreateDirectory(Path.Combine(_webRoot.Path, "data", "empty"));
+        var rule = new AutoSendRule { Name = "Mix", Categories = ["empty", "nope", "weather"] };
+
+        Assert.All(Enumerable.Range(0, 20), _ => Assert.Equal("weather", Create().GetImagePath(rule)));
+    }
 
     [Theory]
     [InlineData("clock")]

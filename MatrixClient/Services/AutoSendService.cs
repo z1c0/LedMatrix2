@@ -14,11 +14,15 @@ public class AutoSendService(AutoSendConfig config, GalleryService gallery, Time
 
     public AutoSendRule? GetActiveRule() => GetActiveRule(time.GetLocalNow().DateTime);
 
-    // First rule (in file order) whose day matches and whose [from, to) window contains now
+    // First rule (in file order) that is in season, whose day matches and whose [from, to) window contains now
     public AutoSendRule? GetActiveRule(DateTime now) =>
-        config.Rules.FirstOrDefault(r => r.IsActiveOn(now.DayOfWeek, now.TimeOfDay));
+        config.Rules.FirstOrDefault(r => r.IsInSeason(now) && r.IsActiveOn(now.DayOfWeek, now.TimeOfDay));
 
     public int IntervalFor(AutoSendRule rule) => rule.IntervalMinutes ?? config.IntervalMinutes;
+
+    // Picks one of the rule's categories at random, skipping any that turn out to be empty
+    public string? GetImagePath(AutoSendRule rule) =>
+        rule.AllCategories.OrderBy(_ => Random.Shared.Next()).Select(GetImagePath).FirstOrDefault(p => p is not null);
 
     public string? GetImagePath(string category)
     {

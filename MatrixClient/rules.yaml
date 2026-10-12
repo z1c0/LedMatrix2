@@ -1,24 +1,50 @@
 interval_minutes: 10
 enabled_on_startup: true
 
+# Where rules overlap, the one listed first wins. Seasonal rules come first so they take over
+# their windows while in season (from_date/to_date are MM-dd, inclusive) and step aside otherwise.
+# `categories` mixes several sources: each send picks one of them at random.
+
 rules:
-  - name: Morning Fuel
-    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
-    from: "07:00"
-    to: "09:00"
-    category: food
+  # ── Seasonal ──────────────────────────────────────────────────────────────
+  - name: Spooky Evenings
+    days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+    from: "17:00"
+    to: "22:00"
+    from_date: "10-01"
+    to_date: "10-31"
+    category: halloween
 
-  - name: Gaming Night
-    days: [Friday, Saturday]
-    from: "20:00"
-    to: "24:00"
-    category: retro
-
-  - name: Weekend RPG
+  - name: Spooky Weekend
     days: [Saturday, Sunday]
     from: "10:00"
-    to: "18:00"
-    category: rpg
+    to: "17:00"
+    from_date: "10-01"
+    to_date: "10-31"
+    categories: [halloween, rpg, weather]
+
+  - name: Christmas Evenings
+    days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+    from: "16:00"
+    to: "22:00"
+    from_date: "12-01"
+    to_date: "01-06"
+    category: christmas
+
+  - name: Christmas Weekend
+    days: [Saturday, Sunday]
+    from: "10:00"
+    to: "16:00"
+    from_date: "12-01"
+    to_date: "01-06"
+    categories: [christmas, food, weather]
+
+  # ── Year-round ────────────────────────────────────────────────────────────
+  - name: Daily Calendar
+    days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+    from: "00:00"
+    to: "01:00"
+    category: calendar
 
   - name: Morning Clock
     days: [Monday, Tuesday, Wednesday, Thursday, Friday]
@@ -27,21 +53,57 @@ rules:
     category: clock
     interval_minutes: 1
 
+  - name: Morning Fuel
+    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
+    from: "07:00"
+    to: "09:00"
+    categories: [food, weather, calendar]
+
+  - name: Weekend Brunch
+    days: [Saturday, Sunday]
+    from: "08:00"
+    to: "10:00"
+    categories: [food, weather]
+
+  - name: Workday Mix
+    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
+    from: "09:00"
+    to: "12:00"
+    categories: [weather, other, arcade]
+
+  - name: Lunch
+    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
+    from: "12:00"
+    to: "13:00"
+    category: food
+
+  - name: Afternoon Mix
+    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
+    from: "13:00"
+    to: "18:00"
+    categories: [weather, rpg, arcade, other]
+
+  - name: Weekend Adventure
+    days: [Saturday, Sunday]
+    from: "10:00"
+    to: "18:00"
+    categories: [rpg, arcade, weather]
+
+  - name: Gaming Night
+    days: [Friday, Saturday]
+    from: "20:00"
+    to: "24:00"
+    categories: [arcade, rpg]
+
+  - name: Evening Mix
+    days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+    from: "18:00"
+    to: "22:00"
+    categories: [rpg, arcade, food, other, weather]
+
   - name: Evening Clock
     days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
     from: "22:00"
     to: "24:00"
     category: clock
     interval_minutes: 1
-
-  - name: Daily Calendar
-    days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
-    from: "00:00"
-    to: "01:00"
-    category: calendar
-
-  - name: Weather Check
-    days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
-    from: "09:00"
-    to: "22:00"
-    category: weather

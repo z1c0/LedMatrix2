@@ -145,7 +145,7 @@ public class AutoSendConfigTests : IDisposable
     }
 
     [Theory]
-    [InlineData("", "category is required")]
+    [InlineData("", "give either category or categories")]
     [InlineData("drinks", "unknown category 'drinks'")]
     public void Validate_RejectsBadCategories(string category, string expected)
     {
@@ -153,6 +153,110 @@ public class AutoSendConfigTests : IDisposable
         rule.Category = category;
 
         Assert.Contains(Validate(rule), e => e.Contains(expected));
+    }
+
+    [Fact]
+    public void Validate_AcceptsCategoryMix()
+    {
+        var rule = ValidRule();
+        rule.Category = "";
+        rule.Categories = ["food", "weather"];
+
+        Assert.Empty(Validate(rule));
+        Assert.Equal(["food", "weather"], rule.AllCategories);
+    }
+
+    [Fact]
+    public void Validate_RejectsCategoryAndCategoriesTogether()
+    {
+        var rule = ValidRule();
+        rule.Categories = ["food"];
+
+        Assert.Contains(Validate(rule), e => e.Contains("give either category or categories"));
+    }
+
+    [Fact]
+    public void Validate_RejectsUnknownCategoryInMix()
+    {
+        var rule = ValidRule();
+        rule.Category = "";
+        rule.Categories = ["food", "drinks", ""];
+
+        var errors = Validate(rule);
+
+        Assert.Contains(errors, e => e.Contains("unknown category 'drinks'"));
+        Assert.Contains(errors, e => e.Contains("categories must not be empty"));
+    }
+
+    [Fact]
+    public void Validate_AcceptsSeason()
+    {
+        var rule = ValidRule();
+        (rule.FromDate, rule.ToDate) = ("12-01", "01-06");
+
+        Assert.Empty(Validate(rule));
+    }
+
+    [Theory]
+    [InlineData("13-01", "10-31", "invalid from_date '13-01'")]
+    [InlineData("10-01", "10-32", "invalid to_date '10-32'")]
+    [InlineData("10-01", null, "from_date and to_date go together")]
+    [InlineData(null, "10-31", "from_date and to_date go together")]
+    public void Validate_RejectsBadSeasons(string? from, string? to, string expected)
+    {
+        var rule = ValidRule();
+        (rule.FromDate, rule.ToDate) = (from, to);
+
+        Assert.Contains(Validate(rule), e => e.Contains(expected));
+    }
+
+    [Theory]
+    [InlineData("10-01", "10-31", "2026-10-01", true)]
+    [InlineData("10-01", "10-31", "2026-10-31", true)]
+    [InlineData("10-01", "10-31", "2026-09-30", false)]
+    [InlineData("10-01", "10-31", "2026-11-01", false)]
+    [InlineData("12-01", "01-06", "2026-12-24", true)]
+    [InlineData("12-01", "01-06", "2027-01-06", true)]
+    [InlineData("12-01", "01-06", "2027-01-07", false)]
+    [InlineData("12-01", "01-06", "2026-07-15", false)]
+    [InlineData(null, null, "2026-07-15", true)]
+    public void IsInSeason_IncludesBothEndsAndWrapsPastNewYear(string? from, string? to, string date, bool expected)
+    {
+        var rule = new AutoSendRule { FromDate = from, ToDate = to };
+
+        Assert.Equal(expected, rule.IsInSeason(DateTime.Parse(date)));
+    }
+
+    [Fact]
+    public void FromYaml_ReadsSeasonAndCategories()
+    {
+        var rule = AutoSendConfig.FromYaml("""
+            rules:
+              - name: Spooky
+                from_date: "10-01"
+                to_date: "10-31"
+                categories: [halloween, weather]
+            """).Rules.Single();
+
+        Assert.Equal(("10-01", "10-31"), (rule.FromDate, rule.ToDate));
+        Assert.Equal(["halloween", "weather"], rule.Categories);
+        Assert.Equal("Oct 1 – Oct 31", rule.Season);
+    }
+
+    [Fact]
+    public void DescribeOverlaps_NotesSeasonAndSkipsDisjointSeasons()
+    {
+        var halloween = new AutoSendRule { Name = "Halloween", Days = ["Friday"], From = "17:00", To = "22:00", FromDate = "10-01", ToDate = "10-31" };
+        var christmas = new AutoSendRule { Name = "Christmas", Days = ["Friday"], From = "16:00", To = "22:00", FromDate = "12-01", ToDate = "01-06" };
+        var evening   = new AutoSendRule { Name = "Evening", Days = ["Friday"], From = "18:00", To = "22:00" };
+
+        var overlaps = new AutoSendConfig { Rules = [halloween, christmas, evening] }.DescribeOverlaps();
+
+        Assert.Equal(
+        [
+            "'Halloween' overrides 'Evening' on Friday 18:00–22:00 (Oct 1 – Oct 31)",
+            "'Christmas' overrides 'Evening' on Friday 18:00–22:00 (Dec 1 – Jan 6)",
+        ], overlaps);
     }
 
     [Fact]

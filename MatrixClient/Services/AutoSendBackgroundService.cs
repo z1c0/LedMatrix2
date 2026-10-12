@@ -137,10 +137,10 @@ public class AutoSendBackgroundService(
 
     private async Task<bool> SendRuleAsync(AutoSendRule rule, DateTime minute)
     {
-        var path = autoSend.GetImagePath(rule.Category);
+        var path = autoSend.GetImagePath(rule);
         if (path is null)
         {
-            logger.LogWarning("Auto-send: no images found in category '{Category}'", rule.Category);
+            logger.LogWarning("Auto-send: no images found in '{Categories}'", string.Join(", ", rule.AllCategories));
             return false;
         }
 
