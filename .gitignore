@@ -399,3 +399,5 @@ FodyWeavers.xsd
 
 # CircuitPython secrets
 Matrix/secrets.py
+
+.DS_Store
