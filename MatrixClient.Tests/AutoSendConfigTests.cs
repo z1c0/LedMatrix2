@@ -144,6 +144,21 @@ public class AutoSendConfigTests : IDisposable
         Assert.Contains(errors, e => e.StartsWith("rule 'Lunch': interval_minutes must be positive"));
     }
 
+    [Fact]
+    public void Validate_SeasonNeedsAllFourSeasonFolders()
+    {
+        var rule = ValidRule();
+        rule.Category = "season";
+        Directory.CreateDirectory(Path.Combine(_dataRoot.Path, "spring"));
+        Directory.CreateDirectory(Path.Combine(_dataRoot.Path, "summer"));
+
+        Assert.Contains(Validate(rule), e => e.Contains("category 'season' needs the folders fall, winter"));
+
+        Directory.CreateDirectory(Path.Combine(_dataRoot.Path, "fall"));
+        Directory.CreateDirectory(Path.Combine(_dataRoot.Path, "winter"));
+        Assert.Empty(Validate(rule));
+    }
+
     [Theory]
     [InlineData("", "give either category or categories")]
     [InlineData("drinks", "unknown category 'drinks'")]

@@ -54,6 +54,12 @@ public class AutoSendConfig
             {
                 if (string.IsNullOrWhiteSpace(category))
                     errors.Add($"{label}: categories must not be empty");
+                else if (category == AutoSendService.SeasonCategory)
+                {
+                    var missing = AutoSendService.SeasonFolders.Where(f => !Directory.Exists(Path.Combine(dataRoot, f))).ToList();
+                    if (missing.Count > 0)
+                        errors.Add($"{label}: category '{category}' needs the folders {string.Join(", ", missing)}");
+                }
                 else if (!DynamicImageService.IsDynamic(category) && !Directory.Exists(Path.Combine(dataRoot, category)))
                     errors.Add($"{label}: unknown category '{category}'");
             }

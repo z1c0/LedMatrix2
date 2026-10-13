@@ -4,6 +4,8 @@ enabled_on_startup: true
 # Where rules overlap, the one listed first wins. Seasonal rules come first so they take over
 # their windows while in season (from_date/to_date are MM-dd, inclusive) and step aside otherwise.
 # `categories` mixes several sources: each send picks one of them at random.
+# `season` stands for the current season's folder (spring Mar–May, summer Jun–Aug, fall Sep–Nov,
+# winter Dec–Feb), so the year-round mixes below change with the seasons.
 
 rules:
   # ── Seasonal ──────────────────────────────────────────────────────────────
@@ -63,13 +65,13 @@ rules:
     days: [Saturday, Sunday]
     from: "08:00"
     to: "10:00"
-    categories: [food, weather]
+    categories: [food, weather, season]
 
   - name: Workday Mix
     days: [Monday, Tuesday, Wednesday, Thursday, Friday]
     from: "09:00"
     to: "12:00"
-    categories: [weather, other, arcade]
+    categories: [weather, other, arcade, season]
 
   - name: Lunch
     days: [Monday, Tuesday, Wednesday, Thursday, Friday]
@@ -81,13 +83,13 @@ rules:
     days: [Monday, Tuesday, Wednesday, Thursday, Friday]
     from: "13:00"
     to: "18:00"
-    categories: [weather, rpg, arcade, other]
+    categories: [weather, rpg, arcade, other, season]
 
   - name: Weekend Adventure
     days: [Saturday, Sunday]
     from: "10:00"
     to: "18:00"
-    categories: [rpg, arcade, weather]
+    categories: [rpg, arcade, weather, season]
 
   - name: Gaming Night
     days: [Friday, Saturday]
@@ -99,7 +101,7 @@ rules:
     days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
     from: "18:00"
     to: "22:00"
-    categories: [rpg, arcade, food, other, weather]
+    categories: [rpg, arcade, food, other, weather, season]
 
   - name: Evening Clock
     days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]

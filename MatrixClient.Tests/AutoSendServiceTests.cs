@@ -137,6 +137,32 @@ public class AutoSendServiceTests : IDisposable
     public void GetImagePath_ReturnsDynamicModesAsIs(string mode) =>
         Assert.Equal(mode, Create().GetImagePath(mode));
 
+    [Theory]
+    [InlineData(3, 1, "spring")]
+    [InlineData(5, 31, "spring")]
+    [InlineData(6, 1, "summer")]
+    [InlineData(8, 31, "summer")]
+    [InlineData(9, 1, "fall")]
+    [InlineData(11, 30, "fall")]
+    [InlineData(12, 1, "winter")]
+    [InlineData(2, 28, "winter")]
+    public void SeasonFor_UsesMeteorologicalSeasons(int month, int day, string expected) =>
+        Assert.Equal(expected, AutoSendService.SeasonFor(new DateTime(2026, month, day)));
+
+    [Fact]
+    public void GetImagePath_SeasonPicksFromTheCurrentSeasonsFolder()
+    {
+        foreach (var season in AutoSendService.SeasonFolders)
+        {
+            var dir = Directory.CreateDirectory(Path.Combine(_webRoot.Path, "data", season)).FullName;
+            File.WriteAllBytes(Path.Combine(dir, $"{season}_icon.png"), []);
+        }
+        var october = new FakeTimeProvider(new DateTimeOffset(2026, 10, 13, 12, 0, 0, TimeSpan.Zero));
+        var service = TestServices.AutoSend(new AutoSendConfig(), _webRoot.Path, october);
+
+        Assert.Equal("fall/fall_icon.png", service.GetImagePath(AutoSendService.SeasonCategory));
+    }
+
     [Fact]
     public void GetImagePath_ReturnsNullForMissingCategory() =>
         Assert.Null(Create().GetImagePath("nope"));
