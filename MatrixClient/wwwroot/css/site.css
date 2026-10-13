@@ -71,6 +71,8 @@ body {
   border-radius: 2px;
   background: #242424;
   transition: border-color 0.1s;
+  /* keyboard navigation scrolls the selection into view with some room around it */
+  scroll-margin: 24px;
 }
 
 .px-thumb:hover  { border-color: #555; }
@@ -268,6 +270,13 @@ body {
 .px-lastsend-fail { color: #d9534f; }
 
 .px-autosend-paused { color: #888; }
+
+.px-keys-hint {
+  margin-top: 0.4rem;
+  font-size: 0.7rem;
+  color: #666;
+  text-align: center;
+}
 
 /* Schedule page */
 .sched-page-header {

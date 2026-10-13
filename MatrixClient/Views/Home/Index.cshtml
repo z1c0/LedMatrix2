@@ -1,4 +1,4 @@
-@model IDictionary<string, string[]>
+﻿@model IDictionary<string, string[]>
 
 @{
 	ViewData["Title"] = "Pixel Matrix";
@@ -41,6 +41,7 @@
 		</div>
 		<button id="btnSend" class="px-send-btn" disabled>Send Pixels</button>
 		<div id="sendError" class="px-send-error" style="display:none"></div>
+		<div class="px-keys-hint">&larr; &rarr; &uarr; &darr; to browse &middot; Enter to send</div>
 
 		<div class="px-autosend">
 			<div class="px-autosend-row">
@@ -66,6 +67,8 @@
 
 		refreshAutoSendStatus();
 		setInterval(refreshAutoSendStatus, 30000);
+
+		document.addEventListener('keydown', onGalleryKey);
 
 		$('#btnAutoSend').click(function () {
 			var enabling = $(this).text() === 'Enable';
@@ -136,6 +139,63 @@
 		selectedPath = imgEl.dataset.path;
 		document.getElementById('large-image').src = imgEl.src;
 		document.getElementById('btnSend').disabled = false;
+	}
+
+	// Cursor keys move the selection through the gallery: left/right in reading order across
+	// categories, up/down to the nearest thumbnail in the row above/below (measured on screen,
+	// so it follows whatever the grid wraps to). Enter sends the selection.
+	function onGalleryKey(e) {
+		if (e.ctrlKey || e.altKey || e.metaKey) return;
+		var tag = (e.target.tagName || '').toLowerCase();
+		if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
+
+		var thumbs = Array.prototype.slice.call(document.querySelectorAll('.px-thumb'));
+		if (!thumbs.length) return;
+		var index = selectedThumb ? thumbs.indexOf(selectedThumb) : -1;
+		var next = null;
+
+		switch (e.key) {
+			case 'ArrowLeft':  next = thumbs[Math.max(0, index - 1)]; break;
+			case 'ArrowRight': next = thumbs[Math.min(thumbs.length - 1, index + 1)]; break;
+			case 'ArrowUp':    next = nearestInRow(thumbs, -1); break;
+			case 'ArrowDown':  next = nearestInRow(thumbs, 1); break;
+			case 'Enter':
+				// A focused button handles Enter itself
+				if (tag === 'button') return;
+				if (!document.getElementById('btnSend').disabled) $('#btnSend').click();
+				e.preventDefault();
+				return;
+			default: return;
+		}
+
+		e.preventDefault();   // no page scrolling on arrow keys
+		if (next && next !== selectedThumb) {
+			selectImage(next);
+			next.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+		}
+	}
+
+	// The thumbnail in the closest row above (direction -1) or below (+1) whose centre is
+	// horizontally nearest to the current one
+	function nearestInRow(thumbs, direction) {
+		if (!selectedThumb) return thumbs[0];
+		var cur = selectedThumb.getBoundingClientRect();
+		var curX = cur.left + cur.width / 2, curY = cur.top + cur.height / 2;
+		var rowY = null, best = null, bestDx = Infinity;
+
+		thumbs.forEach(function (t) {
+			var r = t.getBoundingClientRect();
+			var y = r.top + r.height / 2;
+			if ((y - curY) * direction <= cur.height / 2) return;          // not in that direction
+			if (rowY === null || (y - rowY) * direction < -1) {               // a closer row: start over
+				rowY = y; best = null; bestDx = Infinity;
+			}
+			if (Math.abs(y - rowY) <= 1) {
+				var dx = Math.abs(r.left + r.width / 2 - curX);
+				if (dx < bestDx) { bestDx = dx; best = t; }
+			}
+		});
+		return best;
 	}
 	</script>
 }
