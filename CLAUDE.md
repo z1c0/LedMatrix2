@@ -38,7 +38,10 @@ docker run -p 8080:8080 matrixclient
 CI (Woodpecker) builds via Kaniko and deploys with `kubectl rollout restart deployment/pixelmatrix -n pixelmatrix` on push to `main`.
 
 ### Matrix (CircuitPython)
-No build step. Copy `Matrix/main.py` and a `secrets.py` (from `Matrix/secrets.py.example`) to the Pico W's filesystem. The device auto-runs `main.py` on boot and prints its IP to the serial console.
+No build step. The board is a **Raspberry Pi Pico 2 W** (RP2350) on CircuitPython 9.2.7 with `adafruit_httpserver` 4.6.2 in `lib/`; matrix clock pin is `GP11`.
+
+- **Over the air** (normal way): `PICO_WEB_PASSWORD=... Matrix/deploy.sh` uploads `main.py` through CircuitPython's web workflow on port 8080 (configured in the device's `settings.toml`: `CIRCUITPY_WIFI_SSID`/`_PASSWORD`, `CIRCUITPY_WEB_API_PORT = 8080`, `CIRCUITPY_WEB_API_PASSWORD`), CircuitPython auto-reloads, and the script waits for `GET /status`. The password is not in this public repo. Writes are refused (409) while the `CIRCUITPY` drive is mounted over USB.
+- **Over USB** (first setup / recovery): copy `Matrix/main.py`, a `secrets.py` (from `Matrix/secrets.py.example`) and `settings.toml` to the `CIRCUITPY` drive. It auto-runs `main.py` (as long as there's no `code.py`, which would take precedence) and prints its IP to the serial console.
 
 ## Key Conventions
 
