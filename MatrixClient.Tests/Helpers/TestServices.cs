@@ -30,7 +30,7 @@ public static class TestServices
             NullLogger<PixelSenderService>.Instance);
     }
 
-    public static PicoStatus Status() => new(NullLogger<PicoStatus>.Instance);
+    public static PicoStatus Status(TimeProvider? time = null) => new(NullLogger<PicoStatus>.Instance, time ?? TimeProvider.System);
 
     public static AutoSendService AutoSend(AutoSendConfig config, string webRoot, TimeProvider? time = null) =>
         new(config, Gallery(webRoot), time ?? TimeProvider.System);

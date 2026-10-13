@@ -31,7 +31,7 @@ builder.Services.AddSingleton<AutoSendService>();
 var picoConfig = builder.Configuration.GetSection("Pico").Get<PicoConfig>() ?? new PicoConfig();
 builder.Services.AddSingleton(picoConfig);
 builder.Services.AddSingleton<PicoStatus>();
-builder.Services.AddSingleton<IPicoProbe, TcpPicoProbe>();
+builder.Services.AddSingleton<IPicoProbe, HttpPicoProbe>();
 builder.Services.AddSingleton<PixelSenderService>();
 builder.Services.AddHostedService<AutoSendBackgroundService>();
 

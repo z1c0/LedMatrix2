@@ -199,13 +199,21 @@ body {
 .px-nav-link.active { color: #e0e0e0; font-weight: 600; }
 
 /* Display on/off indicator */
-.px-display {
+.px-display-wrap {
   margin-left: auto;
+  position: relative;
+}
+
+.px-display {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   font-size: 0.75rem;
   color: #777;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .px-display-dot {
@@ -218,6 +226,46 @@ body {
 .px-display-online { color: #aaa; }
 .px-display-online .px-display-dot { background: #6dbf6d; border-color: #6dbf6d; }
 .px-display-offline .px-display-dot { background: #555; }
+
+/* Last send panel, opened from the display indicator */
+.px-lastsend {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 10;
+  width: min(22rem, calc(100vw - 2rem));
+  padding: 0.75rem;
+  background: #242424;
+  border: 1px solid #333;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #bbb;
+}
+
+.px-lastsend-title { font-weight: 600; color: #e0e0e0; margin-bottom: 0.5rem; }
+.px-lastsend-empty { color: #777; }
+.px-lastsend-body { display: flex; gap: 0.75rem; align-items: flex-start; }
+.px-lastsend-body[hidden] { display: none; }
+
+.px-lastsend-img {
+  flex: none;
+  image-rendering: pixelated;
+  background: #000;
+  border: 1px solid #333;
+}
+
+.px-lastsend-info {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.2rem 0.6rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.px-lastsend-info dt { color: #777; font-weight: normal; }
+.px-lastsend-info dd { margin: 0; overflow-wrap: anywhere; }
+.px-lastsend-ok { color: #6dbf6d; }
+.px-lastsend-fail { color: #d9534f; }
 
 .px-autosend-paused { color: #888; }
 

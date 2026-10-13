@@ -39,6 +39,30 @@ public class PixelSenderServiceTests : IDisposable
     }
 
     [Fact]
+    public void FromHex_IsTheInverseOfToHex()
+    {
+        using var img = new Image<Rgba32>(32, 32, new Rgba32(0, 0, 0));
+        img[1, 0] = new Rgba32(0x11, 0x22, 0x33);
+        img[0, 1] = new Rgba32(0x44, 0x55, 0x66);
+        var hex = PixelSenderService.ToHex(img);
+
+        using var decoded = PixelSenderService.FromHex(hex);
+
+        Assert.NotNull(decoded);
+        Assert.Equal(hex, PixelSenderService.ToHex(decoded));
+    }
+
+    [Theory]
+    [InlineData("00")]
+    [InlineData("ZZ")]
+    public void FromHex_RejectsIncompleteOrInvalidPayloads(string start)
+    {
+        var hex = start.Length == 2 && start != "ZZ" ? start : start + new string('0', 6144 - start.Length);
+
+        Assert.Null(PixelSenderService.FromHex(hex));
+    }
+
+    [Fact]
     public void ToHex_IsRowMajor()
     {
         using var img = new Image<Rgba32>(32, 32, new Rgba32(0, 0, 0));

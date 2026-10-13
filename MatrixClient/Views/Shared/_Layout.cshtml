@@ -23,10 +23,25 @@
 				var displayState = MatrixClient.Controllers.DisplayController.StateName(PicoStatus.Current);
 				var displayLabel = displayState switch { "online" => "Display on", "offline" => "Display off", _ => "Display unknown" };
 			}
-			<span id="displayStatus" class="px-display px-display-@displayState" data-url="@Url.Action("Status", "Display")"
-				  title="Checked every minute and after each send">
-				<span class="px-display-dot"></span><span class="px-display-text">@displayLabel</span>
-			</span>
+			<div class="px-display-wrap">
+				<button type="button" id="displayStatus" class="px-display px-display-@displayState" data-url="@Url.Action("Status", "Display")"
+						title="Checked every minute and after each send; click for the last send" aria-expanded="false" aria-controls="lastSendPanel">
+					<span class="px-display-dot"></span><span class="px-display-text">@displayLabel</span>
+				</button>
+				<div id="lastSendPanel" class="px-lastsend" hidden>
+					<div class="px-lastsend-title">Last send</div>
+					<div class="px-lastsend-empty">Nothing sent since the app started</div>
+					<div class="px-lastsend-body" hidden>
+						<img class="px-lastsend-img" alt="Image sent to the matrix" width="96" height="96" />
+						<dl class="px-lastsend-info">
+							<dt>When</dt><dd data-field="at"></dd>
+							<dt>Content</dt><dd data-field="content"></dd>
+							<dt>Result</dt><dd data-field="result"></dd>
+							<dt>Took</dt><dd data-field="duration"></dd>
+						</dl>
+					</div>
+				</div>
+			</div>
 		</nav>
 		<main role="main" class="pb-3">
 			@RenderBody()

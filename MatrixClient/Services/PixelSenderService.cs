@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using MatrixClient.Models;
 using SixLabors.ImageSharp;
@@ -42,6 +43,25 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
         return sb.ToString();
     }
 
+    // Inverse of ToHex, for showing what was sent; null when the payload isn't a full 32x32 hex image
+    public static Image<Rgba32>? FromHex(string hex)
+    {
+        if (hex.Length != 32 * 32 * 6) return null;
+        var image = new Image<Rgba32>(32, 32);
+        for (var i = 0; i < 32 * 32; i++)
+        {
+            if (!byte.TryParse(hex.AsSpan(i * 6, 2), System.Globalization.NumberStyles.HexNumber, null, out var r) ||
+                !byte.TryParse(hex.AsSpan(i * 6 + 2, 2), System.Globalization.NumberStyles.HexNumber, null, out var g) ||
+                !byte.TryParse(hex.AsSpan(i * 6 + 4, 2), System.Globalization.NumberStyles.HexNumber, null, out var b))
+            {
+                image.Dispose();
+                return null;
+            }
+            image[i % 32, i / 32] = new Rgba32(r, g, b);
+        }
+        return image;
+    }
+
     public Task SendRawAsync(string hexPayload) => SendCoreAsync(new PicoStatus.SentContent(null, hexPayload));
 
     private async Task SendCoreAsync(PicoStatus.SentContent sent)
@@ -51,6 +71,7 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
         {
             using var content = new StringContent(sent.Hex, Encoding.UTF8, "application/text");
             using var cts     = new CancellationTokenSource(TimeSpan.FromSeconds(pico.TimeoutSeconds));
+            var stopwatch     = Stopwatch.StartNew();
 
             HttpResponseMessage response;
             try
@@ -59,22 +80,26 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
             }
             catch (OperationCanceledException ex) when (cts.IsCancellationRequested)
             {
+                status.ReportAttempt(sent, false, $"No response within {pico.TimeoutSeconds} s", stopwatch.Elapsed);
                 status.ReportUnreachable();
                 throw new PicoException($"Matrix did not respond within {pico.TimeoutSeconds} s", ex);
             }
             catch (HttpRequestException ex)
             {
+                status.ReportAttempt(sent, false, $"Unreachable ({ex.Message})", stopwatch.Elapsed);
                 status.ReportUnreachable();
                 throw new PicoException($"Matrix is unreachable ({ex.Message})", ex);
             }
 
             using (response)
             {
+                var body   = await response.Content.ReadAsStringAsync();
+                var result = $"{(int)response.StatusCode} {response.ReasonPhrase}: {Truncate(body.Trim(), 200)}";
+                status.ReportAttempt(sent, response.IsSuccessStatusCode, result, stopwatch.Elapsed);
                 if (!response.IsSuccessStatusCode)
                 {
-                    var error = await response.Content.ReadAsStringAsync();
-                    logger.LogWarning("Pico returned {StatusCode}: {Error}", (int)response.StatusCode, error);
-                    throw new PicoException($"Matrix returned {(int)response.StatusCode}: {error}");
+                    logger.LogWarning("Pico returned {StatusCode}: {Error}", (int)response.StatusCode, body);
+                    throw new PicoException($"Matrix returned {(int)response.StatusCode}: {body}");
                 }
             }
             status.ReportSent(sent);
@@ -84,4 +109,6 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
             _sendLock.Release();
         }
     }
+
+    private static string Truncate(string s, int max) => s.Length <= max ? s : s[..max] + "…";
 }
