@@ -1,4 +1,5 @@
 using MatrixClient.Models;
+using MatrixClient.Services;
 using MatrixClient.Tests.Helpers;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -52,9 +53,12 @@ public class ContentTests
         foreach (var rule in LoadRules().Rules)
             foreach (var category in rule.AllCategories)
             {
-                var exists = DynamicModes.Contains(category) ||
-                             Directory.EnumerateFiles(Path.Combine(DataDir, category)).Any();
-                Assert.True(exists, $"{rule.Name}: category '{category}' has no images");
+                if (DynamicModes.Contains(category)) continue;
+                // `season` stands for one of the four season folders, depending on the date: all need images
+                var folders = category == AutoSendService.SeasonCategory ? AutoSendService.SeasonFolders : [category];
+                foreach (var folder in folders)
+                    Assert.True(Directory.EnumerateFiles(Path.Combine(DataDir, folder)).Any(),
+                        $"{rule.Name}: category '{folder}' has no images");
             }
     }
 }
