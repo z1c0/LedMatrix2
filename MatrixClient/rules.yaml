@@ -65,7 +65,7 @@ rules:
     days: [Saturday, Sunday]
     from: "08:00"
     to: "10:00"
-    categories: [food, weather, season]
+    categories: [food, weather, season, football]
 
   - name: Workday Mix
     days: [Monday, Tuesday, Wednesday, Thursday, Friday]
@@ -79,8 +79,14 @@ rules:
     to: "13:00"
     category: food
 
+  - name: Football Friday
+    days: [Friday]
+    from: "13:00"
+    to: "18:00"
+    categories: [football, weather, rpg, arcade, season]
+
   - name: Afternoon Mix
-    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
+    days: [Monday, Tuesday, Wednesday, Thursday]
     from: "13:00"
     to: "18:00"
     categories: [weather, rpg, arcade, other, season]
@@ -89,13 +95,19 @@ rules:
     days: [Saturday, Sunday]
     from: "10:00"
     to: "18:00"
-    categories: [rpg, arcade, weather, season]
+    categories: [football, rpg, arcade, weather, season]
 
   - name: Gaming Night
     days: [Friday, Saturday]
     from: "20:00"
     to: "24:00"
     categories: [arcade, rpg]
+
+  - name: Football Evenings
+    days: [Friday, Saturday, Sunday]
+    from: "18:00"
+    to: "22:00"
+    categories: [football, rpg, arcade, food, weather, season]
 
   - name: Evening Mix
     days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
