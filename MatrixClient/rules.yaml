@@ -71,7 +71,7 @@ rules:
     days: [Monday, Tuesday, Wednesday, Thursday, Friday]
     from: "09:00"
     to: "12:00"
-    categories: [weather, other, arcade, season]
+    categories: [weather, other, arcade, season, win95]
 
   - name: Lunch
     days: [Monday, Tuesday, Wednesday, Thursday, Friday]
@@ -89,7 +89,7 @@ rules:
     days: [Monday, Tuesday, Wednesday, Thursday]
     from: "13:00"
     to: "18:00"
-    categories: [weather, rpg, arcade, other, season, space]
+    categories: [weather, rpg, arcade, other, season, space, win95]
 
   - name: Weekend Adventure
     days: [Saturday, Sunday]
