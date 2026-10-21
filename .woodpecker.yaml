@@ -1,3 +1,20 @@
+# Builds run on k3s-forge (the cluster's amd64 build node, tainted
+# build=true:NoSchedule): every step shares one workspace volume, which is
+# pinned to the node of the first step, so all steps select amd64 and
+# tolerate the taint. See z1c0/cluster bootstrap/build-node.md.
+clone:
+  - name: clone
+    image: woodpeckerci/plugin-git
+    backend_options:
+      kubernetes:
+        nodeSelector:
+          kubernetes.io/arch: amd64
+        tolerations:
+          - key: build
+            operator: Equal
+            value: "true"
+            effect: NoSchedule
+
 steps:
   # Runs first so a failing test (or a broken rules.yaml) stops the build and deploy
   - name: test
@@ -10,14 +27,19 @@ steps:
     backend_options:
       kubernetes:
         nodeSelector:
-          kubernetes.io/arch: arm64
+          kubernetes.io/arch: amd64
+        tolerations:
+          - key: build
+            operator: Equal
+            value: "true"
+            effect: NoSchedule
         resources:
           requests:
-            memory: 512Mi
-            cpu: 500m
-          limits:
             memory: 1Gi
             cpu: 1000m
+          limits:
+            memory: 4Gi
+            cpu: 4000m
 
   - name: build-and-push
     image: woodpeckerci/plugin-kaniko
@@ -32,17 +54,29 @@ steps:
       dockerfile: MatrixClient/Dockerfile
       insecure: true
       insecure-pull: true
+      # Build on k3s-forge (amd64), produce an arm64 image for the Pis.
+      # --credential-helpers= : Kaniko otherwise tries cloud credential
+      # lookups (google, ecr, acr) that time out after 30 s per base image.
+      extra_opts: --custom-platform=linux/arm64 --credential-helpers=
+      # Kaniko resolves every base image for --custom-platform, so the SDK
+      # stage gets an amd64-only tag (see Dockerfile).
+      build_args: SDK_TAG=10.0-noble-amd64
     backend_options:
       kubernetes:
         nodeSelector:
-          kubernetes.io/arch: arm64
+          kubernetes.io/arch: amd64
+        tolerations:
+          - key: build
+            operator: Equal
+            value: "true"
+            effect: NoSchedule
         resources:
           requests:
-            memory: 512Mi
-            cpu: 500m
-          limits:
             memory: 1Gi
             cpu: 1000m
+          limits:
+            memory: 4Gi
+            cpu: 4000m
 
   - name: deploy
     image: bitnami/kubectl
@@ -54,3 +88,10 @@ steps:
     backend_options:
       kubernetes:
         serviceAccountName: woodpecker-agent
+        nodeSelector:
+          kubernetes.io/arch: amd64
+        tolerations:
+          - key: build
+            operator: Equal
+            value: "true"
+            effect: NoSchedule
