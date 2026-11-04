@@ -103,6 +103,16 @@ body {
   display: block;
 }
 
+.px-preview-name {
+  margin-top: 8px;
+  max-width: 256px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  color: #aaa;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 /* Send button */
 .px-send-btn {
   width: 100%;

@@ -38,6 +38,7 @@
 	<div class="px-sidebar">
 		<div class="px-preview">
 			<img id="large-image" src="" alt="" />
+			<div id="previewName" class="px-preview-name"></div>
 		</div>
 		<button id="btnSend" class="px-send-btn" disabled>Send Pixels</button>
 		<div id="sendError" class="px-send-error" style="display:none"></div>
@@ -138,6 +139,7 @@
 		imgEl.classList.add('selected');
 		selectedPath = imgEl.dataset.path;
 		document.getElementById('large-image').src = imgEl.src;
+		document.getElementById('previewName').textContent = imgEl.dataset.path;   // e.g. "work/work_jira.png", or a dynamic mode name
 		document.getElementById('btnSend').disabled = false;
 	}
 
