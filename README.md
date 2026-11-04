@@ -18,7 +18,7 @@ An **ASP.NET Core MVC** (.NET 10) application running in Docker on a home Kubern
 
 ### Features
 
-**Gallery** — browse and send any of the 32×32 PNG images organised into categories (`food`, `rpg`, `retro`, `tech`, `chess`, `other`, `windows`).
+**Gallery** — browse and send any of the 32×32 PNG images organised into categories (e.g. `arcade`, `nes`, `gameboy`, `atari`, `rpg`, `comics`, `dev`, `work`, `food` and the four seasons).
 
 **Draw** — paint directly on a 32×32 pixel canvas with draw, erase, and flood-fill tools, then send to the matrix instantly.
 
