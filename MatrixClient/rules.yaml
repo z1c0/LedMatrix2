@@ -89,19 +89,19 @@ rules:
     days: [Monday, Tuesday, Wednesday, Thursday]
     from: "13:00"
     to: "18:00"
-    categories: [weather, rpg, arcade, other, season, space, win95, comics, dev]
+    categories: [weather, rpg, arcade, other, season, space, win95, comics, dev, nes, gameboy]
 
   - name: Weekend Adventure
     days: [Saturday, Sunday]
     from: "10:00"
     to: "18:00"
-    categories: [football, rpg, arcade, weather, season, movies, comics]
+    categories: [football, rpg, arcade, weather, season, movies, comics, nes, gameboy]
 
   - name: Gaming Night
     days: [Friday, Saturday]
     from: "20:00"
     to: "24:00"
-    categories: [arcade, rpg, space, movies, comics]
+    categories: [arcade, rpg, space, movies, comics, nes, gameboy]
 
   - name: Football Evenings
     days: [Friday, Saturday, Sunday]
@@ -119,7 +119,7 @@ rules:
     days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
     from: "18:00"
     to: "22:00"
-    categories: [rpg, arcade, food, other, weather, season, movies, space, comics]
+    categories: [rpg, arcade, food, other, weather, season, movies, space, comics, nes, gameboy]
 
   - name: Evening Clock
     days: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
