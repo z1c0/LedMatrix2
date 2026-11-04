@@ -113,36 +113,41 @@ def _(c):
 
 @icon('marvel_hulk')
 def _(c):
-    m=art(["......KKKKKKKKKK",
+    m=art(["................",
+           ".....KKKKKKKKKKK",
            "....KKKKKKKKKKKK",
            "...KKKKKKKKKKKKK",
-           "..KKKKKKKKKKKKKK",
-           "..KKKKKKKKKKKKKK",
-           "..KKKKGKKKKKKGKK",
-           "..KKKGGGKKGKGGGG",
-           "..KKGGGGGGGGGGGG",
-           "..KGGGGGGGGGGGGG",
-           "..KGGBBBGGGGGGGG",
-           "..KGGGGBBBBGGGGG",
-           "...GGGGGGBBBBDGG",
-           "...GGWWKKGGGBDGG",
-           "...GGGGGGGGGGDGG",
+           "...KKKKKKKKKKKKK",
+           "...KKGKKKGKKKKGK",
+           "...KGGGKGGGKKGGG",
            "...GGGGGGGGGGGGG",
-           "...GGGGGGGGGGDDG",
            "...GGGGGGGGGGGGG",
-           "...GGGGGMMMMMMMM",
-           "...GGGGMTMTMTMTM",
-           "...GGGGMMMMMMMMM",
-           "...GGGGGGGGGGGGG",
-           "....GGGGGGGGGGGG",
-           "....GGGGGGGGGGGG",
-           ".....GGGGGGGGGGG",
-           "......GGGGGGGGGG",
-           ".......GGGGGGGGG",
-           ".........GGGGGGG"],0,2,mir=True)
-    apply(c,m,dict(K='3a3a40',G='50b030',B='1e5a12',D='2e7a1c',W='f0f0e0',M='14300c',T='f0f0e0'))
-    c.fill(edge(m['K'])-dilate(m['G']),'5a5a64'); c.fill(edge(m['G'])-dilate(m['K']),'2e7a1c')
-
+           "..GBBBBGGGGGGGGG",
+           "..GGDBBBBBBBGGGG",
+           "..GGGDDBBBBBBBBG",
+           "..GGGWWWKKGGDDGG",
+           "..GGGGGGGGGGDGGG",
+           "..GGGGGGGGGGDGGG",
+           ".GGGGGGGGGDDDDDG",
+           ".GDGGGGGGGGGGGGG",
+           ".GDGGGMMMMMMMMMM",
+           ".GDGGMTTMTTMTTMT",
+           ".GDGGMMMMMMMMMMM",
+           ".GDGGMTTMTTMTTMT",
+           ".GDGGGMMMMMMMMMM",
+           ".GDGGGGGGGGGGGGG",
+           ".GGGGGGGGGGGGGGG",
+           "..DGGGGGGGGGGGGG",
+           "...DDDGGGGGGGGGG",
+           ".....DDDDDDDDDDD",
+           "...NNNNNNNNNNNNN",
+           ".NNNNNNNNNNNNNNN",
+           "NNNNNNNNNNNNNNNN",
+           "NNNNNNNNNNNNNNNN",
+           "NNNNNNNNNNNNNNNN"],mir=True)
+    apply(c,m,dict(K='3a3a40',G='50b030',B='1e5a12',D='2e7a1c',W='f0f0e0',M='14300c',T='f0f0e0',N='3a8a22'))
+    c.fill(edge(m['K'])-dilate(m['G']),'5a5a64')
+    c.fill({(x,y) for x,y in m['N'] if y==27 or x in (8,23)},'2e7a1c')
 @icon('marvel_hawkeye_target')
 def _(c):
     for r,col in [(13.6,'7a2ab0'),(11,'e8e8e8'),(8.4,'7a2ab0'),(5.8,'e8e8e8'),(3.2,'7a2ab0')]: c.fill(disc(13,19,r),col)
@@ -226,39 +231,40 @@ def _(c):
 
 @icon('motu_skeletor')
 def _(c):
-    m=art([".......PPPPPPPPP",
-           ".....PPPPPPPPPPP",
-           "....PPPPPPPPPPPP",
-           "...PPPPPPRRRRRRR",
+    m=art(["........PPPPPPPP",
+           "......PPPPPPPPPP",
+           ".....PPPPRPPPPPR",
+           "....PPPRPPPPRPPP",
+           "...PPPRPPPRPPPPP",
+           "...PPRPPQQQQQQQQ",
+           "..PPRPPQYYYYYYYY",
+           "..PPRPQYYYYYYYYY",
+           "..PRPPQYYYYYYYYY",
+           "..PRPQYYYYYYYYYY",
+           "..PRPQYKKKKKYYYY",
+           "..PRPQYKKKKKKYYY",
+           "..PRPQYKKEKKKYYY",
+           "..PRPQYYKKKKKYYY",
+           "..PRPQDYYYYYYYKY",
+           "..PRPPQDYYYYYYKK",
+           "..PRPPQDDYYYYYYY",
+           "..PRPPPQDYYYYYYY",
+           "..PRPPPQDYTKTKTK",
+           "..PRPPPPQDKKKKKK",
+           "..PRPPPPQDYTKTKT",
+           "..PRPPPPPQDYYYYY",
+           "..PRPPPPPPQDYYYY",
+           "..PRPPPPPPPQQYYY",
+           "..PRPPPPPPPPPQQQ",
            "..PPPPPPPPPPPPPP",
-           "..PPPPPPRRRRRRRR",
-           "..PPPPPQYYYYYYYY",
-           ".PPPPQYYYYYYYYYY",
-           ".PPPPQYYYYYYYYYY",
-           ".PPPQYYYYYYYYYYY",
-           ".PPPQYYKKKKYYYYY",
-           ".PPPQYKKKKKKYYYY",
-           ".PPPQYKKEKKKYYYY",
-           ".PPPQYYKKKKYYYYY",
-           ".PPPQYYYYYYYYYKY",
-           ".PPPPQYYYYYYYYKK",
-           ".PPPPQYYYYYYYYYY",
-           ".PPPPPQYYYYYYYYY",
-           "..PPPPQYTKTKTKTK",
-           "..PPPPPQYTKTKTKT",
-           "..PPPPPQYYYYYYYY",
-           "..PPPPPPQYYYYYYY",
-           "..PPPPPPPQYYYYYY",
-           "...PPPPPPPQQQQQQ",
-           "...PPPPPPPPPPPPP",
-           "..BBBPPPPPPPPPPP",
-           ".BBBBBBPPPPPPPPP",
+           ".BBBPPPPPPPPPPPP",
+           "BBBBBBPPPPPPPPPP",
+           "BBBBBBBBPPPPPPPP",
            "BBBBBBBBBKKKKKKK",
-           "BBBBBBBBBKKKKKKK"],0,1,mir=True)
-    apply(c,m,dict(P='7a2aa0',R='5a1a7a',Q='4a1a6a',Y='f0d040',K='0a0a0a',E='e02020',T='f8f0c0',B='3070d0'))
-    c.fill(edge(m['P'])-dilate(m['Y']),'4a1a6a')
-    c.fill({(x,y) for x,y in m['Y'] if x in (6,25) or (x in (7,24) and y>10)},'b89020')
-
+           "BBBBBBBBBKKKKKKK",
+           "BBBBBBBBBKKKKKKK"],mir=True)
+    apply(c,m,dict(P='7a2aa0',R='5a1a7a',Q='4a1a6a',Y='f0d040',D='b89020',K='0a0a0a',E='e02020',T='f8f0c0',B='3070d0'))
+    c.fill(edge(m['P'])-dilate(m['Y']|m['D']),'4a1a6a')
 @icon('motu_orko')
 def _(c):
     hat=poly([(16,1),(20.5,5),(21.5,11),(10.5,11),(11.5,5)])|ell(16,11.6,10,1.6)
