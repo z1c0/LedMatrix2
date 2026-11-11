@@ -11,7 +11,9 @@ Two loosely coupled components communicating over HTTP:
 | Component | Language / Runtime | Role |
 |---|---|---|
 | `Matrix/` | CircuitPython on Raspberry Pi Pico W | Hardware server — drives the 32×32 RGB LED matrix |
-| `MatrixClient/` | C# ASP.NET Core MVC (.NET 11) | Web UI — selects images, converts pixels, POSTs to Pico |
+| `MatrixClient/` | C# ASP.NET Core MVC (.NET 10) | Web UI — selects images, converts pixels, POSTs to Pico |
+
+**Stays on .NET 10 (LTS) for now.** .NET 11 was tried on 2026-11-11 and rolled back: its framework ReadyToRun code targets Arm64 with LSE, which the Pi 4 nodes lack, so the runtime JIT-compiles everything at startup (≈11,100 vs ≈1,200 methods; startup 3.9 → 12.9 s at the 500m CPU limit). `PublishReadyToRun` and a self-contained composite build for `armv8-a` didn't help. Revisit with .NET 12 or Pi 5 nodes.
 
 **Data flow**: User selects a 32×32 image (or a dynamic mode: clock/calendar/weather) → `PixelSenderService` converts it to a 6,144-char hex string (one 6-char RGB value per pixel) → HTTP POST to the Pico W → `main.py` parses hex, converts to RGB565, writes to framebuffer. `AutoSendBackgroundService` does the same on a schedule from `rules.yaml`.
 

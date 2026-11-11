@@ -12,7 +12,7 @@ The 32×32 RGB LED Matrix is driven by a **Raspberry Pi Pico W** running **Circu
 
 ## Software — MatrixClient
 
-An **ASP.NET Core MVC** (.NET 11) application running in Docker on a home Kubernetes cluster.
+An **ASP.NET Core MVC** (.NET 10) application running in Docker on a home Kubernetes cluster.
 
 ![The client application](images/matrix_client.png)
 

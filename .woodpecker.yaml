@@ -18,7 +18,7 @@ clone:
 steps:
   # Runs first so a failing test (or a broken rules.yaml) stops the build and deploy
   - name: test
-    image: mcr.microsoft.com/dotnet/sdk:11.0
+    image: mcr.microsoft.com/dotnet/sdk:10.0
     when:
       - event: push
         branch: main
@@ -60,7 +60,7 @@ steps:
       extra_opts: --custom-platform=linux/arm64 --credential-helpers=
       # Kaniko resolves every base image for --custom-platform, so the SDK
       # stage gets an amd64-only tag (see Dockerfile).
-      build_args: SDK_TAG=11.0-resolute-amd64
+      build_args: SDK_TAG=10.0-noble-amd64
     backend_options:
       kubernetes:
         nodeSelector:
