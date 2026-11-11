@@ -2,9 +2,9 @@
 # and pick the build host's architecture from the multi-arch tag. Kaniko
 # ignores FROM --platform and resolves every base image for --custom-platform
 # (the arm64 target), so the Woodpecker pipeline passes an amd64-only tag.
-ARG SDK_TAG=10.0
+ARG SDK_TAG=11.0
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled AS base
+FROM mcr.microsoft.com/dotnet/aspnet:11.0-resolute-chiseled AS base
 WORKDIR /app
 EXPOSE 8080
 

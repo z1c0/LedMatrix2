@@ -11,7 +11,7 @@ Two loosely coupled components communicating over HTTP:
 | Component | Language / Runtime | Role |
 |---|---|---|
 | `Matrix/` | CircuitPython on Raspberry Pi Pico W | Hardware server — drives the 32×32 RGB LED matrix |
-| `MatrixClient/` | C# ASP.NET Core MVC (.NET 10) | Web UI — selects images, converts pixels, POSTs to Pico |
+| `MatrixClient/` | C# ASP.NET Core MVC (.NET 11) | Web UI — selects images, converts pixels, POSTs to Pico |
 
 **Data flow**: User selects a 32×32 image (or a dynamic mode: clock/calendar/weather) → `PixelSenderService` converts it to a 6,144-char hex string (one 6-char RGB value per pixel) → HTTP POST to the Pico W → `main.py` parses hex, converts to RGB565, writes to framebuffer. `AutoSendBackgroundService` does the same on a schedule from `rules.yaml`.
 
