@@ -154,7 +154,7 @@ public class AutoSendBackgroundServiceTests : IDisposable
         var rig = CreateRig(_pico, ClockRule("Clock", "00:00", "24:00"));
         rig.Probe.Reachable = false;
 
-        await rig.Service.ProbeAsync();
+        await rig.Service.ProbeAsync(TestContext.Current.CancellationToken);
         await rig.Service.TickAsync(TenAm);
 
         Assert.True(rig.Status.IsOffline);
@@ -170,11 +170,11 @@ public class AutoSendBackgroundServiceTests : IDisposable
         await rig.Service.TickAsync(At(rig, 0));             // scheduled send
         At(rig, 2);
         rig.Probe.Reachable = false;
-        await rig.Service.ProbeAsync();                      // power off
+        await rig.Service.ProbeAsync(TestContext.Current.CancellationToken);                      // power off
         await rig.Service.TickAsync(At(rig, 3));
         At(rig, 5);
         rig.Probe.Reachable = true;
-        await rig.Service.ProbeAsync();                      // power on → refill now, not at 10:10
+        await rig.Service.ProbeAsync(TestContext.Current.CancellationToken);                      // power on → refill now, not at 10:10
         Assert.Equal(2, _pico.Requests.Count);
 
         for (var m = 6; m <= 14; m++)
@@ -190,7 +190,7 @@ public class AutoSendBackgroundServiceTests : IDisposable
     {
         var rig = CreateRig(_pico, ClockRule("Clock", "00:00", "24:00"));
 
-        await rig.Service.ProbeAsync();
+        await rig.Service.ProbeAsync(TestContext.Current.CancellationToken);
         await rig.Service.TickAsync(At(rig, 1));             // no double send right after
 
         Assert.Single(_pico.Requests);
@@ -202,8 +202,8 @@ public class AutoSendBackgroundServiceTests : IDisposable
         var rig = CreateRig(_pico, ClockRule("Clock", "00:00", "24:00"));
         await rig.Service.TickAsync(TenAm);
 
-        await rig.Service.ProbeAsync();
-        await rig.Service.ProbeAsync();
+        await rig.Service.ProbeAsync(TestContext.Current.CancellationToken);
+        await rig.Service.ProbeAsync(TestContext.Current.CancellationToken);
 
         Assert.Single(_pico.Requests);
     }
@@ -215,10 +215,10 @@ public class AutoSendBackgroundServiceTests : IDisposable
         var drawing = string.Concat(Enumerable.Repeat("ABCDEF", 1024));
         await rig.Sender.SendRawAsync(drawing);
         rig.Probe.Reachable = false;
-        await rig.Service.ProbeAsync();
+        await rig.Service.ProbeAsync(TestContext.Current.CancellationToken);
 
         rig.Probe.Reachable = true;
-        await rig.Service.ProbeAsync();
+        await rig.Service.ProbeAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal([drawing, drawing], _pico.Requests.Select(r => r.Body));
     }
@@ -230,11 +230,11 @@ public class AutoSendBackgroundServiceTests : IDisposable
         rig.AutoSend.Disable();
         await rig.Sender.SendAsync("clock");                 // manual send at 10:00
         rig.Probe.Reachable = false;
-        await rig.Service.ProbeAsync();
+        await rig.Service.ProbeAsync(TestContext.Current.CancellationToken);
 
         At(rig, 7);
         rig.Probe.Reachable = true;
-        await rig.Service.ProbeAsync();
+        await rig.Service.ProbeAsync(TestContext.Current.CancellationToken);
 
         var expected = ClockRenderer.Render(TenAm.AddMinutes(7));
         Assert.Equal(PixelSenderService.ToHex(expected), _pico.Requests[^1].Body);
@@ -245,7 +245,7 @@ public class AutoSendBackgroundServiceTests : IDisposable
     {
         var rig = CreateRig(_pico);
 
-        await rig.Service.ProbeAsync();
+        await rig.Service.ProbeAsync(TestContext.Current.CancellationToken);
 
         Assert.Empty(_pico.Requests);
         Assert.False(rig.Status.IsOffline);

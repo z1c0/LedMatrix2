@@ -60,7 +60,7 @@ Iterate until every icon reads clearly.
 - Add the category to the fitting rules in `MatrixClient/rules.yaml` (`categories: [...]`).
   Gaming sets usually join Gaming Night, Evening Mix, Weekend Adventure and the weekday Afternoon Mix;
   ask if the right slots are unclear. Extending an existing category needs no rule change.
-- Run `dotnet test MatrixClient/MatrixClient.sln` (it validates `rules.yaml`).
+- Run `dotnet test --solution MatrixClient/MatrixClient.sln` (it validates `rules.yaml`).
 
 ## 5. Report / commit
 Tell the user what was added (list the icons) and which rules changed. Commit only when asked;

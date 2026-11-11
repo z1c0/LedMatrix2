@@ -29,8 +29,10 @@ dotnet run
 # Build release
 dotnet build -c Release
 
-# Run tests (xUnit project lives outside the Docker build context, in ../MatrixClient.Tests)
-dotnet test MatrixClient.sln
+# Run tests: xUnit v3 on Microsoft.Testing.Platform (global.json switches dotnet test to it, so pass --solution/--project; the xUnit project lives outside the Docker build context, in ../MatrixClient.Tests)
+dotnet test --solution MatrixClient.sln
+# Stop a hanging test after 5 min with a dump in TestResults/ (a plain timeout cannot abort a sync loop)
+dotnet test --solution MatrixClient.sln --hangdump --hangdump-timeout 5m
 
 # Docker
 docker build -f Dockerfile -t matrixclient .

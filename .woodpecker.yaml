@@ -23,7 +23,8 @@ steps:
       - event: push
         branch: main
     commands:
-      - dotnet test MatrixClient/MatrixClient.sln
+      # HangDump kills a hung test run after 5 min (and dumps it) instead of blocking the pipeline
+      - dotnet test --solution MatrixClient/MatrixClient.sln --hangdump --hangdump-timeout 5m
     backend_options:
       kubernetes:
         nodeSelector:

@@ -401,3 +401,6 @@ FodyWeavers.xsd
 Matrix/secrets.py
 
 .DS_Store
+
+# Test results and hang dumps (Microsoft.Testing.Platform)
+TestResults/
