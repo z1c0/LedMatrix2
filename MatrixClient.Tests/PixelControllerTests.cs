@@ -7,8 +7,7 @@ using MatrixClient.Tests.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using MatrixClient.Imaging;
 
 namespace MatrixClient.Tests;
 
@@ -40,8 +39,7 @@ public class PixelControllerTests : IDisposable
         if (bytes is not null)
             File.WriteAllBytes(full, bytes);
         else
-            using (var img = new Image<Rgba32>(size, size))
-                img.SaveAsPng(full);
+            new PixelImage(size, size).SavePng(full);
     }
 
     // Model binding has already URL-decoded the form value; decoding again would turn '+' into ' '
@@ -246,7 +244,7 @@ public class DynamicControllerTests
         var file = Assert.IsType<FileContentResult>(await Create().Preview(mode));
 
         Assert.Equal("image/png", file.ContentType);
-        using var img = Image.Load<Rgba32>(file.FileContents);
+        var img = PixelImage.Load(file.FileContents);
         Assert.Equal((32, 32), (img.Width, img.Height));
     }
 

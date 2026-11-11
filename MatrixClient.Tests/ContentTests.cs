@@ -1,8 +1,7 @@
 using MatrixClient.Models;
 using MatrixClient.Services;
 using MatrixClient.Tests.Helpers;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using MatrixClient.Imaging;
 
 namespace MatrixClient.Tests;
 
@@ -29,7 +28,7 @@ public class ContentTests
     [MemberData(nameof(GalleryImages))]
     public void GalleryImage_Is32x32(string relativePath)
     {
-        using var img = Image.Load<Rgba32>(Path.Combine(DataDir, relativePath));
+        var img = PixelImage.Load(Path.Combine(DataDir, relativePath));
 
         Assert.Equal((32, 32), (img.Width, img.Height));
     }

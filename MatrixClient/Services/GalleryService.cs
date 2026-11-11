@@ -4,7 +4,7 @@ namespace MatrixClient.Services;
 public class GalleryService(IWebHostEnvironment env)
 {
     private static readonly HashSet<string> ImageExtensions =
-        new([".png", ".bmp", ".jpg", ".jpeg", ".gif", ".webp"], StringComparer.OrdinalIgnoreCase);
+        new([".png"], StringComparer.OrdinalIgnoreCase);
 
     public string DataRoot => Path.Combine(env.WebRootPath, "data");
 

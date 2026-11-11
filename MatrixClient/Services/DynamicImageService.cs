@@ -1,12 +1,11 @@
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using MatrixClient.Imaging;
 
 namespace MatrixClient.Services;
 
 // Images rendered on demand instead of read from the gallery; usable anywhere a gallery path is
 public class DynamicImageService(WeatherService weatherService, TimeProvider time)
 {
-    private static readonly Dictionary<string, Func<DynamicImageService, Task<Image<Rgba32>>>> Renderers = new()
+    private static readonly Dictionary<string, Func<DynamicImageService, Task<PixelImage>>> Renderers = new()
     {
         ["clock"]    = s => Task.FromResult(ClockRenderer.Render(s.LocalNow)),
         ["calendar"] = s => Task.FromResult(CalendarRenderer.Render(s.LocalNow)),
@@ -20,7 +19,7 @@ public class DynamicImageService(WeatherService weatherService, TimeProvider tim
     private DateTime LocalNow => time.GetLocalNow().DateTime;
     private WeatherService Weather => weatherService;
 
-    public Task<Image<Rgba32>> RenderAsync(string mode) =>
+    public Task<PixelImage> RenderAsync(string mode) =>
         Renderers.TryGetValue(mode, out var render)
             ? render(this)
             : throw new ArgumentException($"Unknown dynamic mode: {mode}");

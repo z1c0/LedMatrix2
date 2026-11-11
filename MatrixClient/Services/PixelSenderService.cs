@@ -1,8 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 using MatrixClient.Models;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using MatrixClient.Imaging;
 
 namespace MatrixClient.Services;
 
@@ -14,9 +13,9 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
     // Sends a gallery path ("food/apple.png") or a dynamic mode ("clock")
     public async Task SendAsync(string path)
     {
-        using var image = DynamicImageService.IsDynamic(path)
+        var image = DynamicImageService.IsDynamic(path)
             ? await dynamicImages.RenderAsync(path)
-            : await Image.LoadAsync<Rgba32>(gallery.ResolvePath(path));
+            : await PixelImage.LoadAsync(gallery.ResolvePath(path));
         if (image.Width != 32 || image.Height != 32)
             throw new InvalidDataException($"Image must be 32x32, got {image.Width}x{image.Height}");
 
@@ -24,7 +23,7 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
     }
 
     // One RRGGBB hex triple per pixel, row-major; near-transparent pixels become black
-    public static string ToHex(Image<Rgba32> image)
+    public static string ToHex(PixelImage image)
     {
         var sb = new StringBuilder(image.Width * image.Height * 6);
         for (var y = 0; y < image.Height; y++)
@@ -44,19 +43,16 @@ public class PixelSenderService(PicoConfig pico, IHttpClientFactory httpClientFa
     }
 
     // Inverse of ToHex, for showing what was sent; null when the payload isn't a full 32x32 hex image
-    public static Image<Rgba32>? FromHex(string hex)
+    public static PixelImage? FromHex(string hex)
     {
         if (hex.Length != 32 * 32 * 6) return null;
-        var image = new Image<Rgba32>(32, 32);
+        var image = new PixelImage(32, 32);
         for (var i = 0; i < 32 * 32; i++)
         {
             if (!byte.TryParse(hex.AsSpan(i * 6, 2), System.Globalization.NumberStyles.HexNumber, null, out var r) ||
                 !byte.TryParse(hex.AsSpan(i * 6 + 2, 2), System.Globalization.NumberStyles.HexNumber, null, out var g) ||
                 !byte.TryParse(hex.AsSpan(i * 6 + 4, 2), System.Globalization.NumberStyles.HexNumber, null, out var b))
-            {
-                image.Dispose();
                 return null;
-            }
             image[i % 32, i / 32] = new Rgba32(r, g, b);
         }
         return image;

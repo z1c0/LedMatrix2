@@ -1,12 +1,11 @@
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using MatrixClient.Imaging;
 
 namespace MatrixClient.Tests.Helpers;
 
 public static class ImageAssert
 {
     // Renders a region as ASCII art: '#' for any pixel that differs from the background
-    public static string[] Ascii(Image<Rgba32> img, int x, int y, int w, int h, Rgba32 background)
+    public static string[] Ascii(PixelImage img, int x, int y, int w, int h, Rgba32 background)
     {
         var rows = new string[h];
         for (var r = 0; r < h; r++)
@@ -19,7 +18,7 @@ public static class ImageAssert
         return rows;
     }
 
-    public static int CountLit(Image<Rgba32> img, Rgba32 background)
+    public static int CountLit(PixelImage img, Rgba32 background)
     {
         var n = 0;
         for (var y = 0; y < img.Height; y++)
@@ -29,7 +28,7 @@ public static class ImageAssert
     }
 
     // Bounding box (inclusive) of all pixels with exactly this colour, or null if absent
-    public static (int MinX, int MinY, int MaxX, int MaxY)? Bounds(Image<Rgba32> img, Rgba32 color)
+    public static (int MinX, int MinY, int MaxX, int MaxY)? Bounds(PixelImage img, Rgba32 color)
     {
         int minX = int.MaxValue, minY = int.MaxValue, maxX = -1, maxY = -1;
         for (var y = 0; y < img.Height; y++)

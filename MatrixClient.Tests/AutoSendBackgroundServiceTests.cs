@@ -236,7 +236,7 @@ public class AutoSendBackgroundServiceTests : IDisposable
         rig.Probe.Reachable = true;
         await rig.Service.ProbeAsync();
 
-        using var expected = ClockRenderer.Render(TenAm.AddMinutes(7));
+        var expected = ClockRenderer.Render(TenAm.AddMinutes(7));
         Assert.Equal(PixelSenderService.ToHex(expected), _pico.Requests[^1].Body);
     }
 

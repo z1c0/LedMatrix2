@@ -1,5 +1,4 @@
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using MatrixClient.Imaging;
 
 namespace MatrixClient.Services;
 
@@ -9,13 +8,13 @@ public static class ClockRenderer
     private static readonly Rgba32 DigitColor = new(0,  160,  255);
     private static readonly Rgba32 ColonColor = new(0,   90,  160);
 
-    public static Image<Rgba32> Render(DateTime now)
+    public static PixelImage Render(DateTime now)
     {
         var hh   = now.ToString("HH");
         var mm   = now.ToString("mm");
         var text = hh + ":" + mm;
 
-        var img = new Image<Rgba32>(32, 32, Background);
+        var img = new PixelImage(32, 32, Background);
 
         int w = PixelFont.StringWidth(text);
         int x = (32 - w) / 2;

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using SixLabors.ImageSharp;
+using MatrixClient.Imaging;
 using MatrixClient.Services;
 
 namespace MatrixClient.Controllers;
@@ -14,9 +14,7 @@ public class DynamicController(DynamicImageService dynamicImages) : Controller
     {
         if (!DynamicImageService.IsDynamic(mode)) return NotFound();
 
-        using var img = await dynamicImages.RenderAsync(mode);
-        using var ms  = new MemoryStream();
-        await img.SaveAsPngAsync(ms);
-        return File(ms.ToArray(), "image/png");
+        var img = await dynamicImages.RenderAsync(mode);
+        return File(img.ToPng(), "image/png");
     }
 }

@@ -1,5 +1,4 @@
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using MatrixClient.Imaging;
 
 namespace MatrixClient.Services;
 
@@ -23,12 +22,12 @@ public static class WeatherRenderer
     private static readonly Rgba32 ColFog     = new(160, 165, 170);
     private static readonly Rgba32 ColUnit    = new(100, 100, 100);
 
-    public static async Task<Image<Rgba32>> RenderAsync(WeatherService weather) =>
+    public static async Task<PixelImage> RenderAsync(WeatherService weather) =>
         await weather.GetCurrentAsync() is { } data ? Render(data) : RenderUnavailable();
 
-    public static Image<Rgba32> Render(WeatherService.WeatherData data)
+    public static PixelImage Render(WeatherService.WeatherData data)
     {
-        var img  = new Image<Rgba32>(32, 32, Background);
+        var img  = new PixelImage(32, 32, Background);
 
         // Icon — centered horizontally, top area (y=1)
         var (icon, iconColor) = GetIcon(data.WeatherCode);
@@ -48,9 +47,9 @@ public static class WeatherRenderer
     }
 
     // Shown instead of a plausible-looking fake reading when there's no fresh data
-    public static Image<Rgba32> RenderUnavailable()
+    public static PixelImage RenderUnavailable()
     {
-        var img = new Image<Rgba32>(32, 32, Background);
+        var img = new PixelImage(32, 32, Background);
         var w   = PixelFont.StringWidth("--", scale: 2);
         PixelFont.DrawString(img, "--", (32 - w) / 2, 11, ColUnit, scale: 2);
         return img;
@@ -79,7 +78,7 @@ public static class WeatherRenderer
         _     => new Rgba32(160, 210, 255),
     };
 
-    private static void DrawIcon(Image<Rgba32> img, byte[] rows, int x, int y, Rgba32 color)
+    private static void DrawIcon(PixelImage img, byte[] rows, int x, int y, Rgba32 color)
     {
         for (int row = 0; row < 8; row++)
             for (int col = 0; col < 8; col++)

@@ -61,7 +61,7 @@ public class TimeZoneTests : IDisposable
 
         await sender.SendAsync("clock");
 
-        using var expected = ClockRenderer.Render(new DateTime(2026, 10, 2, 10, 34, 0));
+        var expected = ClockRenderer.Render(new DateTime(2026, 10, 2, 10, 34, 0));
         Assert.Equal(PixelSenderService.ToHex(expected), Assert.Single(pico.Requests).Body);
     }
 

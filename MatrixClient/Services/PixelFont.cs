@@ -1,5 +1,4 @@
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using MatrixClient.Imaging;
 
 namespace MatrixClient.Services;
 
@@ -58,7 +57,7 @@ public static class PixelFont
         return total > 0 ? (total - 1) * scale : 0;
     }
 
-    public static void DrawString(Image<Rgba32> img, string text, int x, int y, Rgba32 color, int scale = 1)
+    public static void DrawString(PixelImage img, string text, int x, int y, Rgba32 color, int scale = 1)
     {
         int cx = x;
         foreach (var c in text.ToUpperInvariant())
@@ -69,7 +68,7 @@ public static class PixelFont
         }
     }
 
-    private static void DrawGlyph(Image<Rgba32> img, byte[] rows, int x, int y, Rgba32 color, int scale, int w)
+    private static void DrawGlyph(PixelImage img, byte[] rows, int x, int y, Rgba32 color, int scale, int w)
     {
         for (int row = 0; row < GlyphHeight; row++)
             for (int col = 0; col < w; col++)

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MatrixClient.Services;
-using SixLabors.ImageSharp;
+using MatrixClient.Imaging;
 
 namespace MatrixClient.Controllers;
 
@@ -35,12 +35,10 @@ public class DisplayController(PicoStatus status) : Controller
     public IActionResult LastSent()
     {
         var hex = status.LastAttempt?.Content.Hex;
-        using var image = hex is null ? null : PixelSenderService.FromHex(hex);
+        var image = hex is null ? null : PixelSenderService.FromHex(hex);
         if (image is null) return NotFound();
 
-        using var png = new MemoryStream();
-        image.SaveAsPng(png);
-        return File(png.ToArray(), "image/png");
+        return File(image.ToPng(), "image/png");
     }
 
     public static string StateName(PicoStatus.State state) => state.ToString().ToLowerInvariant();

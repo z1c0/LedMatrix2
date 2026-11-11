@@ -1,7 +1,6 @@
 using MatrixClient.Services;
 using MatrixClient.Tests.Helpers;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using MatrixClient.Imaging;
 
 namespace MatrixClient.Tests;
 
@@ -43,7 +42,7 @@ public class PixelFontTests
     [Fact]
     public void DrawString_DrawsGlyphBitmapAtPosition()
     {
-        using var img = new Image<Rgba32>(32, 32, Black);
+        var img = new PixelImage(32, 32, Black);
 
         PixelFont.DrawString(img, "4", 2, 3, White);
 
@@ -56,7 +55,7 @@ public class PixelFontTests
     [Fact]
     public void DrawString_ScalesEachPixelToABlock()
     {
-        using var img = new Image<Rgba32>(32, 32, Black);
+        var img = new PixelImage(32, 32, Black);
 
         PixelFont.DrawString(img, "-", 0, 0, White, scale: 2);
 
@@ -67,7 +66,7 @@ public class PixelFontTests
     [Fact]
     public void DrawString_ClipsAtImageEdgesWithoutThrowing()
     {
-        using var img = new Image<Rgba32>(32, 32, Black);
+        var img = new PixelImage(32, 32, Black);
 
         PixelFont.DrawString(img, "88", 29, 29, White, scale: 2);
         PixelFont.DrawString(img, "8", -2, -2, White);

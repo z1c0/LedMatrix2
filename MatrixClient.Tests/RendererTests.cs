@@ -1,6 +1,6 @@
+using MatrixClient.Imaging;
 using MatrixClient.Services;
 using MatrixClient.Tests.Helpers;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace MatrixClient.Tests;
 
@@ -9,7 +9,7 @@ public class ClockRendererTests
     [Fact]
     public void Render_DrawsCenteredTime()
     {
-        using var img = ClockRenderer.Render(new DateTime(2026, 10, 2, 12, 34, 56));
+        var img = ClockRenderer.Render(new DateTime(2026, 10, 2, 12, 34, 56));
         var bg = img[0, 0];
 
         // "12:34" is 17px wide and 5px tall → origin (7, 13)
@@ -28,8 +28,8 @@ public class ClockRendererTests
     [Fact]
     public void Render_UsesTwentyFourHourFormat()
     {
-        using var morning = ClockRenderer.Render(new DateTime(2026, 10, 2, 9, 5, 0));
-        using var evening = ClockRenderer.Render(new DateTime(2026, 10, 2, 21, 5, 0));
+        var morning = ClockRenderer.Render(new DateTime(2026, 10, 2, 9, 5, 0));
+        var evening = ClockRenderer.Render(new DateTime(2026, 10, 2, 21, 5, 0));
         var bg = morning[0, 0];
 
         // Leading zero for single-digit hours: first hour digit of "09:05" is '0'
@@ -45,7 +45,7 @@ public class CalendarRendererTests
     public void Render_DrawsWeekdayDayNumberAndMonthInThreeRows()
     {
         // 2026-10-02 is a Friday
-        using var img = CalendarRenderer.Render(new DateTime(2026, 10, 2));
+        var img = CalendarRenderer.Render(new DateTime(2026, 10, 2));
 
         var dayColor   = img[10, 2];   // top-left pixel of 'F'
         var numColor   = img[13, 10];  // top-left pixel of '2' at scale 2
@@ -60,7 +60,7 @@ public class CalendarRendererTests
     [Fact]
     public void Render_CentersTwoDigitDays()
     {
-        using var img = CalendarRenderer.Render(new DateTime(2026, 10, 28));
+        var img = CalendarRenderer.Render(new DateTime(2026, 10, 28));
         var numColor = img[9, 10];
 
         // "28" is 14px wide at scale 2 → x 9..22
@@ -72,7 +72,7 @@ public class CalendarRendererTests
     {
         for (var d = new DateTime(2026, 1, 1); d.Year == 2026; d = d.AddDays(1))
         {
-            using var img = CalendarRenderer.Render(d);
+            var img = CalendarRenderer.Render(d);
             Assert.True(ImageAssert.CountLit(img, img[0, 0]) > 0);
         }
     }
@@ -87,7 +87,7 @@ public class WeatherRendererTests
     [Fact]
     public void Render_DrawsIconTemperatureAndUnit()
     {
-        using var img = WeatherRenderer.Render(new WeatherService.WeatherData(-5.4, 61, "°C"));
+        var img = WeatherRenderer.Render(new WeatherService.WeatherData(-5.4, 61, "°C"));
 
         Assert.Equal((12, 1, 19, 8), ImageAssert.Bounds(img, RainColor));       // 8×8 icon, centered
         Assert.Equal((9, 11, 22, 20), ImageAssert.Bounds(img, FreezingColor));  // "-5" at scale 2
@@ -105,7 +105,7 @@ public class WeatherRendererTests
     [InlineData(10, 180, 180, 200)]  // unmapped → cloud
     public void Render_PicksIconForWeatherCode(int code, byte r, byte g, byte b)
     {
-        using var img = WeatherRenderer.Render(new WeatherService.WeatherData(-20, code, "°C"));
+        var img = WeatherRenderer.Render(new WeatherService.WeatherData(-20, code, "°C"));
 
         var bounds = ImageAssert.Bounds(img, new Rgba32(r, g, b));
         Assert.NotNull(bounds);
@@ -120,7 +120,7 @@ public class WeatherRendererTests
     [InlineData(-1,  160, 210, 255)]
     public void Render_ColorsTemperatureByRange(double temp, byte r, byte g, byte b)
     {
-        using var img = WeatherRenderer.Render(new WeatherService.WeatherData(temp, 45, "°C"));
+        var img = WeatherRenderer.Render(new WeatherService.WeatherData(temp, 45, "°C"));
 
         var bounds = ImageAssert.Bounds(img, new Rgba32(r, g, b));
         Assert.NotNull(bounds);
@@ -130,7 +130,7 @@ public class WeatherRendererTests
     [Fact]
     public void RenderUnavailable_ShowsOnlyDashes()
     {
-        using var img = WeatherRenderer.RenderUnavailable();
+        var img = WeatherRenderer.RenderUnavailable();
 
         // "--" at scale 2: 14px wide, the dash is glyph row 2 → y 15..16
         Assert.Equal((9, 15, 22, 16), ImageAssert.Bounds(img, UnitColor));
@@ -140,8 +140,8 @@ public class WeatherRendererTests
     [Fact]
     public void Render_RoundsTemperature()
     {
-        using var rounded = WeatherRenderer.Render(new WeatherService.WeatherData(4.6, 45, "°C"));
-        using var exact   = WeatherRenderer.Render(new WeatherService.WeatherData(5, 45, "°C"));
+        var rounded = WeatherRenderer.Render(new WeatherService.WeatherData(4.6, 45, "°C"));
+        var exact   = WeatherRenderer.Render(new WeatherService.WeatherData(5, 45, "°C"));
 
         Assert.Equal(
             ImageAssert.Ascii(exact, 0, 0, 32, 32, exact[0, 0]),

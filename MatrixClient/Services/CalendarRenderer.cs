@@ -1,5 +1,4 @@
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using MatrixClient.Imaging;
 
 namespace MatrixClient.Services;
 
@@ -14,13 +13,13 @@ public static class CalendarRenderer
     private static readonly string[] MonthNames = ["JAN","FEB","MAR","APR","MAY","JUN",
                                                     "JUL","AUG","SEP","OCT","NOV","DEC"];
 
-    public static Image<Rgba32> Render(DateTime now)
+    public static PixelImage Render(DateTime now)
     {
         var dayAbbr  = DayNames[(int)now.DayOfWeek];
         var dayNum   = now.Day.ToString();
         var monthAbbr = MonthNames[now.Month - 1];
 
-        var img = new Image<Rgba32>(32, 32, Background);
+        var img = new PixelImage(32, 32, Background);
 
         // Row 1: weekday name at scale 1 (y=2)
         int w = PixelFont.StringWidth(dayAbbr);

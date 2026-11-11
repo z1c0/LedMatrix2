@@ -3,8 +3,7 @@ using MatrixClient.Models;
 using MatrixClient.Services;
 using MatrixClient.Tests.Helpers;
 using Microsoft.Extensions.Logging.Abstractions;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using MatrixClient.Imaging;
 
 namespace MatrixClient.Tests;
 
@@ -21,8 +20,8 @@ public class PixelSenderServiceTests : IDisposable
     {
         var full = Path.Combine(_webRoot.Path, "data", relativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(full)!);
-        using var img = new Image<Rgba32>(size, size, fill);
-        img.SaveAsPng(full);
+        var img = new PixelImage(size, size, fill);
+        img.SavePng(full);
     }
 
     // ── ToHex ────────────────────────────────────────────────────────────────
@@ -30,7 +29,7 @@ public class PixelSenderServiceTests : IDisposable
     [Fact]
     public void ToHex_ProducesSixUppercaseHexCharsPerPixel()
     {
-        using var img = new Image<Rgba32>(32, 32, new Rgba32(0xAB, 0x0C, 0xEF));
+        var img = new PixelImage(32, 32, new Rgba32(0xAB, 0x0C, 0xEF));
 
         var hex = PixelSenderService.ToHex(img);
 
@@ -41,12 +40,12 @@ public class PixelSenderServiceTests : IDisposable
     [Fact]
     public void FromHex_IsTheInverseOfToHex()
     {
-        using var img = new Image<Rgba32>(32, 32, new Rgba32(0, 0, 0));
+        var img = new PixelImage(32, 32, new Rgba32(0, 0, 0));
         img[1, 0] = new Rgba32(0x11, 0x22, 0x33);
         img[0, 1] = new Rgba32(0x44, 0x55, 0x66);
         var hex = PixelSenderService.ToHex(img);
 
-        using var decoded = PixelSenderService.FromHex(hex);
+        var decoded = PixelSenderService.FromHex(hex);
 
         Assert.NotNull(decoded);
         Assert.Equal(hex, PixelSenderService.ToHex(decoded));
@@ -65,7 +64,7 @@ public class PixelSenderServiceTests : IDisposable
     [Fact]
     public void ToHex_IsRowMajor()
     {
-        using var img = new Image<Rgba32>(32, 32, new Rgba32(0, 0, 0));
+        var img = new PixelImage(32, 32, new Rgba32(0, 0, 0));
         img[1, 0] = new Rgba32(0x11, 0x22, 0x33);   // second pixel of the first row
         img[0, 1] = new Rgba32(0x44, 0x55, 0x66);   // first pixel of the second row
 
@@ -82,7 +81,7 @@ public class PixelSenderServiceTests : IDisposable
     [InlineData(255, "FF8000")]
     public void ToHex_TreatsNearlyTransparentPixelsAsBlack(byte alpha, string expected)
     {
-        using var img = new Image<Rgba32>(32, 32, new Rgba32(255, 128, 0, alpha));
+        var img = new PixelImage(32, 32, new Rgba32(255, 128, 0, alpha));
 
         Assert.Equal(expected, PixelSenderService.ToHex(img)[..6]);
     }

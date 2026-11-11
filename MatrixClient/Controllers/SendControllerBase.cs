@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MatrixClient.Services;
-using SixLabors.ImageSharp;
+using MatrixClient.Imaging;
 
 namespace MatrixClient.Controllers;
 

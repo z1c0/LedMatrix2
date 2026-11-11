@@ -21,7 +21,8 @@ public class GalleryServiceTests : IDisposable
     {
         Touch("retro/b.png");
         Touch("retro/a.bmp");
-        Touch("food/apple.JPG");
+        Touch("food/apple.PNG");
+        Touch("food/pear.jpg");   // only PNG is supported
         Touch("food/.DS_Store");
         Touch("food/readme.txt");
         Touch(".git/x.png");
@@ -29,8 +30,8 @@ public class GalleryServiceTests : IDisposable
         var categories = TestServices.Gallery(_webRoot.Path).GetCategories();
 
         Assert.Equal(["food", "retro"], categories.Keys);
-        Assert.Equal(["food/apple.JPG"], categories["food"]);
-        Assert.Equal(["retro/a.bmp", "retro/b.png"], categories["retro"]);
+        Assert.Equal(["food/apple.PNG"], categories["food"]);
+        Assert.Equal(["retro/b.png"], categories["retro"]);
     }
 
     [Fact]
